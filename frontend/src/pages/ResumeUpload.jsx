@@ -14,15 +14,6 @@ const processingTexts = [
   'Building your profile...',
 ]
 
-const mockResumeData = {
-  name: 'Vedcharan Peddu',
-  role: 'Software Engineer',
-  skills: ['Python', 'React', 'Machine Learning', 'Cloud Computing'],
-  experience: '2 years in software development',
-  education: 'B.S. Computer Science, UT Dallas',
-  certifications: ['AWS Cloud Practitioner'],
-  projects: ['AI Chatbot', 'E-commerce Platform'],
-}
 
 function ProgressBar({ currentStep }) {
   return (
@@ -99,7 +90,7 @@ export default function ResumeUpload() {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
         const response = await axios.post(`${apiUrl}/api/extract-resume`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
-          timeout: 30000,
+          timeout: 60000,
         })
 
         const result = response.data
@@ -110,16 +101,11 @@ export default function ResumeUpload() {
           localStorage.setItem('user_id', result.user_id)
         }
         setStatus('done')
+        toast.success('Resume extracted successfully!')
       } catch (err) {
-        console.warn('API call failed, using mock data:', err.message)
-        toast.error('Resume extraction failed — using demo profile')
-
-        // Use mock data as fallback
-        setTimeout(() => {
-          setResumeData(mockResumeData)
-          localStorage.setItem('resumeData', JSON.stringify(mockResumeData))
-          setStatus('done')
-        }, 2000)
+        console.error('Resume extraction failed:', err.message)
+        toast.error('Resume extraction failed. Please try again.')
+        setStatus('idle')
       }
     },
     []
