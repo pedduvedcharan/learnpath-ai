@@ -11,7 +11,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 def _call_gemini(prompt: str, max_retries: int = 3) -> str:
     """Call Gemini with retry logic for rate limits."""
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
     for attempt in range(max_retries):
         try:
             response = model.generate_content(prompt)
