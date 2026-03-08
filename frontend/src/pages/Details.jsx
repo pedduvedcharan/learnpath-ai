@@ -88,14 +88,7 @@ export default function Details() {
   })
   const [skillInput, setSkillInput] = useState('')
 
-  useEffect(() => {
-    const saved = localStorage.getItem('userDetails')
-    if (saved) {
-      try {
-        setForm(JSON.parse(saved))
-      } catch {}
-    }
-  }, [])
+  // No localStorage — form starts fresh every time
 
   const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }))
 
@@ -117,7 +110,6 @@ export default function Details() {
   const isValid = form.name.trim() && form.role.trim() && form.skills.length > 0
 
   const handleNext = () => {
-    localStorage.setItem('userDetails', JSON.stringify(form))
     navigate('/resume')
   }
 
