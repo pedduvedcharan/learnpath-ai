@@ -554,11 +554,11 @@ Set "ready" to true if score >= 60."""
         return {"score": 0, "ready": False, "feedback": "Unable to score at this time."}
 
 
-def chat_response(message: str, profile: dict, roadmap: list, history: list) -> str:
+def chat_response(message: str, profile: dict, roadmap: list, history: list, diagnosis: dict = None) -> str:
     try:
         # Build history context
         history_text = ""
-        for msg in history[-10:]:  # Last 10 messages
+        for msg in history[-10:]:
             role = msg.get("role", "user")
             text = msg.get("text", "")
             history_text += f"{role}: {text}\n"
@@ -571,20 +571,69 @@ def chat_response(message: str, profile: dict, roadmap: list, history: list) -> 
         name = profile.get("name", "Learner")
         topic = profile.get("topic", "")
         level = profile.get("currentLevel", "")
+        skills = ", ".join(profile.get("skills", []))
+        role = profile.get("role", "")
 
-        prompt = f"""You are Coach Sarah, an expert AI learning mentor. You are helping {name} learn {topic} at {level} level.
+        # Build diagnosis context
+        diagnosis_text = ""
+        if diagnosis:
+            gap = diagnosis.get("gap", "")
+            why_blocking = diagnosis.get("why_blocking", "")
+            fix_time = diagnosis.get("fix_time", "")
+            what_you_know = ", ".join(diagnosis.get("what_you_know", []))
+            key_concepts = ", ".join(diagnosis.get("key_concepts", []))
+            challenge = diagnosis.get("challenge", "")
+            diagnosis_text = f"""
+DIAGNOSIS DATA:
+- Knowledge gap: {gap}
+- Why it's blocking: {why_blocking}
+- Estimated fix time: {fix_time}
+- What they already know: {what_you_know}
+- Key concepts to learn: {key_concepts}
+- Practice challenge assigned: {challenge}
+"""
 
-Their learning roadmap:
+        prompt = f"""You are Coach Sarah, an expert AI learning mentor with access to the internet and current knowledge. You are helping {name} ({role}) learn {topic} at {level} level.
+
+LEARNER PROFILE:
+- Name: {name}
+- Role: {role}
+- Skills: {skills}
+- Topic: {topic}
+- Level: {level}
+{diagnosis_text}
+LEARNING ROADMAP:
 {roadmap_text}
 
-Recent conversation:
+RECENT CONVERSATION:
 {history_text}
 
-User's message: {message}
+USER'S MESSAGE: {message}
 
-Respond helpfully as Coach Sarah. Be warm, encouraging, and specific. Keep responses concise but informative. If they ask about their roadmap, reference the specific steps. If they're stuck, provide practical advice."""
+INSTRUCTIONS:
+1. You are Coach Sarah — warm, encouraging, knowledgeable, and specific.
+2. You have FULL knowledge of this learner's profile, diagnosis, roadmap, and history above.
+3. When the user asks questions about ANY topic (technical, career, learning strategies, etc.), give accurate, detailed answers using your knowledge.
+4. Reference their specific roadmap steps, diagnosed gaps, and skills when relevant.
+5. If the user asks about something outside their current topic, still answer helpfully — you're a general learning coach.
+6. Provide code examples, explanations, links to concepts, or step-by-step guides when appropriate.
+7. Keep responses concise but thorough. Use markdown formatting for code blocks and lists.
+8. If they're stuck, give practical, actionable advice with specific next steps.
+9. Always relate advice back to their learning journey when possible."""
 
-        return _call_gemini(prompt)
+        # Use Gemini with Google Search grounding for up-to-date answers
+        try:
+            model = genai.GenerativeModel("gemini-2.5-flash")
+            from google.generativeai.types import content_types
+            response = model.generate_content(
+                prompt,
+                tools=[{"google_search": {}}],
+            )
+            return response.text
+        except Exception as grounding_err:
+            print(f"Grounding failed, falling back to standard: {grounding_err}")
+            return _call_gemini(prompt)
+
     except Exception as e:
         print(f"Chat response error: {e}")
         return "I'm having trouble responding right now. Please try again in a moment."

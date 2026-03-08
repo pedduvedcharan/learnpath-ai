@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from models.schemas import LearningProfile
@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api")
 
 
 @router.post("/extract-resume")
-async def extract_resume(file: UploadFile = File(...)):
+async def extract_resume(file: UploadFile = File(...), user_id: Optional[str] = Form(None)):
     try:
         contents = await file.read()
         pdf_reader = PyPDF2.PdfReader(io.BytesIO(contents))
@@ -22,7 +22,6 @@ async def extract_resume(file: UploadFile = File(...)):
         if not pdf_text.strip():
             raise HTTPException(status_code=400, detail="Could not extract text from PDF")
 
-        # Log what PyPDF2 actually extracted so we can debug
         print(f"=== PDF TEXT START ===")
         print(pdf_text[:2000])
         print(f"=== PDF TEXT END (total {len(pdf_text)} chars) ===")
@@ -31,8 +30,11 @@ async def extract_resume(file: UploadFile = File(...)):
         extracted = gemini_service.extract_resume(pdf_text)
         print(f"=== GEMINI EXTRACTED: {extracted} ===")
 
-        # Save to MongoDB
-        user_id = db_service.save_user(extracted)
+        # If user_id provided, update existing user. Otherwise create new.
+        if user_id:
+            db_service.update_user(user_id, extracted)
+        else:
+            user_id = db_service.save_user(extracted)
 
         return {
             "success": True,
@@ -117,6 +119,33 @@ async def get_questions(user_id: str):
         return {"success": True, "questions": questions}
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CreateUserRequest(BaseModel):
+    user_id: Optional[str] = None
+    name: Optional[str] = ""
+    role: Optional[str] = ""
+    skills: Optional[list] = []
+    industry: Optional[str] = ""
+    experience: Optional[int] = 0
+    learningGoal: Optional[str] = ""
+    hoursPerWeek: Optional[int] = 10
+
+
+@router.post("/create-user")
+async def create_user(request: CreateUserRequest):
+    """Create or update a user from the details form."""
+    try:
+        user_data = request.model_dump(exclude={"user_id"})
+        if request.user_id:
+            # Update existing user
+            db_service.update_user(request.user_id, user_data)
+            return {"success": True, "user_id": request.user_id}
+        else:
+            user_id = db_service.save_user(user_data)
+            return {"success": True, "user_id": user_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

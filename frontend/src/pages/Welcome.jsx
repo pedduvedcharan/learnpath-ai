@@ -1,22 +1,18 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
-const particles = Array.from({ length: 20 }, (_, i) => ({
+const particles = Array.from({ length: 15 }, (_, i) => ({
   id: i,
   left: Math.random() * 100,
-  size: 4 + Math.random() * 2,
-  duration: 10 + Math.random() * 15,
+  size: 4 + Math.random() * 3,
+  duration: 12 + Math.random() * 15,
   delay: Math.random() * 15,
-  color: i % 2 === 0 ? 'bg-cyan-400' : 'bg-violet-400',
+  color: i % 3 === 0 ? 'bg-indigo-400' : i % 3 === 1 ? 'bg-violet-400' : 'bg-amber-300',
 }))
 
 const container = {
   hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.15,
-    },
-  },
+  show: { transition: { staggerChildren: 0.15 } },
 }
 
 const fadeUp = {
@@ -35,12 +31,12 @@ export default function Welcome() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Animated gradient mesh background */}
+      {/* Soft gradient background */}
       <div
         className="absolute inset-0 animate-gradient-mesh pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse at 20% 50%, rgba(6,182,212,0.2) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, rgba(139,92,246,0.15) 0%, transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(6,182,212,0.1) 0%, transparent 50%)',
+            'radial-gradient(ellipse at 20% 50%, rgba(79,70,229,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, rgba(139,92,246,0.06) 0%, transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(245,158,11,0.04) 0%, transparent 50%)',
           backgroundSize: '400% 400%',
         }}
       />
@@ -49,7 +45,7 @@ export default function Welcome() {
       {particles.map((p) => (
         <div
           key={p.id}
-          className={`absolute rounded-full ${p.color} opacity-20 pointer-events-none`}
+          className={`absolute rounded-full ${p.color} opacity-15 pointer-events-none`}
           style={{
             left: `${p.left}%`,
             width: `${p.size}px`,
@@ -68,7 +64,7 @@ export default function Welcome() {
       >
         {/* Badge */}
         <motion.div variants={fadeUp}>
-          <span className="inline-block border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-sm rounded-full px-4 py-1">
+          <span className="inline-block border border-indigo-200 bg-indigo-50 text-indigo-600 text-sm font-medium rounded-full px-4 py-1">
             &#10022; HackAI 2026 — UT Dallas
           </span>
         </motion.div>
@@ -76,20 +72,20 @@ export default function Welcome() {
         {/* Title */}
         <motion.h1
           variants={fadeUp}
-          className="font-heading text-5xl md:text-7xl font-extrabold text-white tracking-tight"
+          className="font-heading text-5xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-700 via-violet-600 to-indigo-700 bg-clip-text text-transparent"
         >
           LearnPath AI
         </motion.h1>
 
         {/* Subtitle */}
-        <motion.p variants={fadeUp} className="text-xl text-cyan-400 font-medium">
+        <motion.p variants={fadeUp} className="text-xl text-indigo-600 font-medium">
           Your Personal AI Learning Coach
         </motion.p>
 
         {/* Description */}
         <motion.p
           variants={fadeUp}
-          className="text-slate-400 max-w-2xl text-center leading-relaxed"
+          className="text-slate-500 max-w-2xl text-center leading-relaxed"
         >
           Upload your resume, answer a few targeted questions, and let our AI engine
           diagnose your skill gaps, generate a personalized learning roadmap, and
@@ -101,32 +97,33 @@ export default function Welcome() {
           {features.map((f) => (
             <span
               key={f.label}
-              className="bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-slate-300"
+              className="bg-white border border-slate-200 rounded-full px-4 py-2 text-sm text-slate-600 shadow-sm"
             >
               {f.emoji} {f.label}
             </span>
           ))}
         </motion.div>
 
-        {/* CTA Button */}
-        <motion.button
-          variants={fadeUp}
-          onClick={() => navigate('/details')}
-          className="mt-4 px-8 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-white font-semibold text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.03] hover:shadow-cyan-500/40 active:scale-[0.97] transition-all duration-200 cursor-pointer"
-        >
-          Begin Your Journey &rarr;
-        </motion.button>
+        {/* CTA Buttons */}
+        <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-4 mt-4">
+          <button
+            onClick={() => navigate('/auth')}
+            className="px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold text-lg shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 cursor-pointer"
+          >
+            Get Started &rarr;
+          </button>
+          <button
+            onClick={() => navigate('/auth?tab=login')}
+            className="px-8 py-4 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-lg hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md transition-all duration-200 cursor-pointer"
+          >
+            Welcome Back
+          </button>
+        </motion.div>
       </motion.div>
 
       {/* Scroll indicator */}
       <div className="absolute bottom-8 z-10 animate-bounce-chevron">
-        <svg
-          className="w-6 h-6 text-slate-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
+        <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </div>

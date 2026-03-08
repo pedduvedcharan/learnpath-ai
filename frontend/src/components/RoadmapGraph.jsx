@@ -13,25 +13,25 @@ function RoadmapNode({ data }) {
 
   const statusStyles = {
     complete: {
-      bg: 'bg-green-500/20',
-      border: 'border-green-500',
-      text: 'text-green-400',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-500',
+      text: 'text-emerald-600',
       icon: '\u2713',
       opacity: '',
     },
     current: {
-      bg: 'bg-cyan-500/20',
-      border: 'border-cyan-500',
-      text: 'text-cyan-400',
+      bg: 'bg-indigo-50',
+      border: 'border-indigo-500',
+      text: 'text-indigo-600',
       icon: '\u25B6',
       opacity: '',
     },
     locked: {
-      bg: 'bg-slate-800/50',
-      border: 'border-slate-600',
-      text: 'text-slate-500',
+      bg: 'bg-slate-50',
+      border: 'border-slate-300',
+      text: 'text-slate-400',
       icon: '\uD83D\uDD12',
-      opacity: 'opacity-50',
+      opacity: 'opacity-60',
     },
   }
 
@@ -46,7 +46,7 @@ function RoadmapNode({ data }) {
       <div
         className={`rounded-xl px-4 py-3 border-2 ${s.bg} ${s.border} ${s.opacity} ${
           status === 'current' ? 'scale-110 animate-pulse-glow' : ''
-        } transition-all cursor-pointer hover:brightness-125`}
+        } transition-all cursor-pointer hover:brightness-95`}
         style={{ minWidth: 140, textAlign: 'center' }}
       >
         <div className={`text-lg mb-1 ${s.text}`}>{s.icon}</div>
@@ -99,12 +99,12 @@ export default function RoadmapGraph({ roadmap = [], onNodeClick }) {
           type: 'default',
           animated: isActive,
           style: {
-            stroke: isActive ? '#0ea5e9' : '#475569',
+            stroke: isActive ? '#4F46E5' : '#CBD5E1',
             strokeWidth: 2,
           },
           markerEnd: {
             type: 'arrowclosed',
-            color: isActive ? '#0ea5e9' : '#475569',
+            color: isActive ? '#4F46E5' : '#CBD5E1',
           },
         }
       }),
@@ -138,7 +138,7 @@ export default function RoadmapGraph({ roadmap = [], onNodeClick }) {
         elementsSelectable={false}
         style={{ background: 'transparent' }}
       >
-        <Background variant="dots" gap={20} size={0.5} color="#1e293b" />
+        <Background variant="dots" gap={20} size={0.5} color="#E2E8F0" />
       </ReactFlow>
     </div>
   )

@@ -109,7 +109,7 @@ function LoadingScreen() {
         className="absolute inset-0 animate-gradient-mesh opacity-30"
         style={{
           background:
-            'radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, rgba(139,92,246,0.15) 0%, transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(245,158,11,0.1) 0%, transparent 50%)',
+            'radial-gradient(ellipse at 20% 50%, rgba(79,70,229,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, rgba(139,92,246,0.08) 0%, transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(245,158,11,0.04) 0%, transparent 50%)',
         }}
       />
 
@@ -124,13 +124,13 @@ function LoadingScreen() {
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="w-24 h-24 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 mb-10 relative"
+        className="w-24 h-24 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 mb-10 relative"
         style={{
           filter: 'blur(1px)',
-          boxShadow: '0 0 60px rgba(14,165,233,0.4), 0 0 120px rgba(139,92,246,0.2)',
+          boxShadow: '0 0 60px rgba(79,70,229,0.3), 0 0 120px rgba(139,92,246,0.15)',
         }}
       >
-        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-cyan-400 to-violet-600 blur-sm" />
+        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-indigo-400 to-violet-600 blur-sm" />
       </motion.div>
 
       {/* Cycling text */}
@@ -142,7 +142,7 @@ function LoadingScreen() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.4 }}
-            className="text-lg text-slate-300 font-medium text-center"
+            className="text-lg text-slate-600 font-medium text-center"
           >
             {loadingTexts[textIndex]}
           </motion.p>
@@ -150,9 +150,9 @@ function LoadingScreen() {
       </div>
 
       {/* Progress bar */}
-      <div className="w-64 bg-slate-800 h-1.5 rounded-full mt-8 overflow-hidden relative z-10">
+      <div className="w-64 bg-slate-200 h-1.5 rounded-full mt-8 overflow-hidden relative z-10">
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500"
+          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.3 }}
         />
@@ -161,33 +161,74 @@ function LoadingScreen() {
   )
 }
 
-function VoiceCoachBar({ audioUrl, voiceNarration }) {
+function VoiceCoachPanel({ audioUrl, voiceNarration }) {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
+  const [displayedText, setDisplayedText] = useState('')
   const [autoPlayFailed, setAutoPlayFailed] = useState(false)
+  const [audioReady, setAudioReady] = useState(false)
+  const [audioError, setAudioError] = useState(false)
   const audioRef = useRef(null)
+  const audioUrlRef = useRef(audioUrl)
+  const typewriterRef = useRef(null)
 
+  // Store audioUrl in ref for replay
   useEffect(() => {
-    if (audioUrl) {
-      const audio = new Audio(audioUrl)
-      audioRef.current = audio
-
-      audio.onplay = () => setIsPlaying(true)
-      audio.onpause = () => setIsPlaying(false)
-      audio.onended = () => setIsPlaying(false)
-
-      audio.play().catch(() => {
-        setAutoPlayFailed(true)
-      })
-
-      return () => {
-        audio.pause()
-        audio.src = ''
-      }
-    }
+    audioUrlRef.current = audioUrl
   }, [audioUrl])
 
+  // Auto-play audio on mount
+  useEffect(() => {
+    if (dismissed || !audioUrl) return
+
+    const audio = new Audio(audioUrl)
+    audioRef.current = audio
+
+    audio.oncanplaythrough = () => setAudioReady(true)
+    audio.onplay = () => { setIsPlaying(true); setAutoPlayFailed(false) }
+    audio.onpause = () => setIsPlaying(false)
+    audio.onended = () => setIsPlaying(false)
+    audio.onerror = (e) => {
+      console.error('Audio load error:', e)
+      setAudioError(true)
+      setAutoPlayFailed(true)
+    }
+
+    audio.play().catch((err) => {
+      console.log('Autoplay blocked:', err.message)
+      setAutoPlayFailed(true)
+    })
+
+    return () => { audio.pause(); audio.src = '' }
+  }, [audioUrl, dismissed])
+
+  // Typewriter effect for narration text
+  useEffect(() => {
+    if (!voiceNarration || dismissed) return
+    setDisplayedText('')
+    let i = 0
+    const text = voiceNarration
+    typewriterRef.current = setInterval(() => {
+      i++
+      setDisplayedText(text.slice(0, i))
+      if (i >= text.length) clearInterval(typewriterRef.current)
+    }, 30)
+    return () => clearInterval(typewriterRef.current)
+  }, [voiceNarration, dismissed])
+
   const togglePlay = () => {
-    if (!audioRef.current) return
+    if (!audioRef.current) {
+      // Recreate audio if it was destroyed
+      if (audioUrlRef.current) {
+        const audio = new Audio(audioUrlRef.current)
+        audioRef.current = audio
+        audio.onplay = () => setIsPlaying(true)
+        audio.onpause = () => setIsPlaying(false)
+        audio.onended = () => setIsPlaying(false)
+        audio.play().catch(() => {})
+      }
+      return
+    }
     if (isPlaying) {
       audioRef.current.pause()
     } else {
@@ -195,59 +236,115 @@ function VoiceCoachBar({ audioUrl, voiceNarration }) {
     }
   }
 
-  // Waveform bars
-  const bars = [0.4, 0.7, 1, 0.6, 0.8]
+  const handleStop = () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+    audioRef.current = null
+    clearInterval(typewriterRef.current)
+    setDismissed(true)
+  }
+
+  if (dismissed) return null
+
+  // Show panel even without audio — narration text is still valuable
+  if (!audioUrl && !voiceNarration) return null
+
+  const bars = [0.4, 0.7, 1, 0.6, 0.8, 0.5, 0.9]
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="sticky top-16 z-30 bg-slate-900/80 backdrop-blur-xl border-b border-slate-700 p-3"
+      initial={{ x: 340, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 340, opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+      className="fixed top-20 right-4 z-50 w-[320px] bg-white border border-slate-200 rounded-2xl shadow-xl shadow-indigo-500/10 overflow-hidden"
     >
-      <div className="max-w-6xl mx-auto flex items-center gap-4">
-        {/* AI orb */}
-        <div
-          className={`w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 flex-shrink-0 ${
-            isPlaying ? 'animate-pulse' : ''
-          }`}
-        />
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-indigo-600 to-violet-600">
+        <div className="relative">
+          <div className={`w-9 h-9 rounded-full bg-white/20 flex items-center justify-center ${isPlaying ? '' : ''}`}>
+            <div className={`w-5 h-5 rounded-full bg-white ${isPlaying ? 'animate-pulse' : ''}`} />
+          </div>
+          {isPlaying && (
+            <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-indigo-600" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white">Coach Sarah</p>
+          <p className="text-xs text-white/70">{isPlaying ? 'Speaking...' : audioError ? 'Audio unavailable' : autoPlayFailed ? 'Tap play to listen' : audioUrl ? 'Your AI Coach' : 'Your AI Coach'}</p>
+        </div>
+        <button
+          onClick={handleStop}
+          className="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
+          title="Close"
+        >
+          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
-        {/* Status text */}
-        <span className="text-sm text-slate-300 flex-1 min-w-0 truncate">
-          {isPlaying ? 'Coach Sarah is speaking...' : autoPlayFailed ? 'Click to listen to Coach Sarah' : 'Click to replay'}
-        </span>
-
-        {/* Waveform */}
-        <div className="flex items-center gap-0.5 h-6">
+      {/* Waveform */}
+      {(isPlaying || autoPlayFailed) && (
+        <div className="flex items-center justify-center gap-[3px] h-8 px-4 bg-indigo-50/50">
           {bars.map((height, i) => (
             <div
               key={i}
-              className="w-1 bg-cyan-500 rounded-full transition-all duration-150"
+              className="w-[3px] bg-indigo-500 rounded-full transition-all duration-150"
               style={{
-                height: isPlaying ? `${height * 24}px` : '4px',
-                animation: isPlaying ? `waveform 0.8s ease-in-out ${i * 0.1}s infinite alternate` : 'none',
+                height: isPlaying ? `${height * 20}px` : '3px',
+                animation: isPlaying ? `waveform 0.7s ease-in-out ${i * 0.08}s infinite alternate` : 'none',
               }}
             />
           ))}
         </div>
+      )}
 
-        {/* Controls */}
-        <div className="flex items-center gap-2">
-          {audioUrl && (
-            <button
-              onClick={togglePlay}
-              className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors px-3 py-1 rounded-lg hover:bg-slate-800"
-            >
-              {isPlaying ? '\u23F8 Pause' : '\uD83D\uDD0A Replay'}
-            </button>
-          )}
-          {!audioUrl && voiceNarration && (
-            <span className="text-xs text-slate-500 italic max-w-xs truncate hidden md:block">
-              {voiceNarration}
-            </span>
-          )}
+      {/* Narration text — typewriter */}
+      {voiceNarration && (
+        <div className="px-4 py-3 max-h-[200px] overflow-y-auto">
+          <p className="text-sm text-slate-600 leading-relaxed">
+            {displayedText}
+            {displayedText.length < voiceNarration.length && (
+              <span className="inline-block w-0.5 h-4 bg-indigo-500 ml-0.5 animate-pulse align-middle" />
+            )}
+          </p>
         </div>
+      )}
+
+      {/* Controls */}
+      <div className="flex items-center gap-2 px-4 py-3 border-t border-slate-100">
+        {audioUrl && !audioError && (
+          <button
+            onClick={togglePlay}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+              isPlaying
+                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                : 'bg-indigo-600 text-white hover:bg-indigo-500'
+            }`}
+          >
+            {isPlaying ? (
+              <span className="flex items-center justify-center gap-1.5">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6" />
+                </svg>
+                Pause
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-1.5">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                </svg>
+                {autoPlayFailed ? 'Play' : 'Replay'}
+              </span>
+            )}
+          </button>
+        )}
+        <button
+          onClick={handleStop}
+          className={`py-2 px-4 rounded-lg text-sm font-medium transition-all ${audioUrl && !audioError ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'flex-1 bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+        >
+          {audioUrl && !audioError ? 'Stop' : 'Dismiss'}
+        </button>
       </div>
 
       <style>{`
@@ -260,7 +357,6 @@ function VoiceCoachBar({ audioUrl, voiceNarration }) {
   )
 }
 
-// Section wrapper for staggered reveal
 function RevealSection({ visible, delay, children }) {
   return (
     <AnimatePresence>
@@ -286,7 +382,6 @@ export default function Analysis() {
   const [searchParams] = useSearchParams()
   const userId = searchParams.get('uid') || ''
 
-  // Fetch data on mount — everything comes from MongoDB via user_id
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -319,7 +414,6 @@ export default function Analysis() {
     }
   }, [userId])
 
-  // Stagger section reveals after loading completes
   useEffect(() => {
     if (!loading && data) {
       const totalSections = 6
@@ -331,7 +425,6 @@ export default function Analysis() {
           setTimeout(reveal, 500)
         }
       }
-      // Start first reveal after a beat
       setTimeout(reveal, 300)
     }
   }, [loading, data])
@@ -348,10 +441,12 @@ export default function Analysis() {
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Voice Coach Bar */}
-      <RevealSection visible={visibleSections >= 1} delay={0}>
-        <VoiceCoachBar audioUrl={data.audio_url} voiceNarration={data.voice_narration} />
-      </RevealSection>
+      {/* Voice Coach Sidebar Panel */}
+      <AnimatePresence>
+        {visibleSections >= 1 && (
+          <VoiceCoachPanel audioUrl={data.audio_url} voiceNarration={data.voice_narration} />
+        )}
+      </AnimatePresence>
 
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-10">
         {/* Section A: Diagnosis */}
@@ -360,7 +455,7 @@ export default function Analysis() {
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="font-heading text-2xl font-bold text-white mb-6"
+              className="font-heading text-2xl font-bold text-slate-900 mb-6"
             >
               Your Diagnosis
             </motion.h2>
@@ -376,20 +471,19 @@ export default function Analysis() {
         {/* Section B: Roadmap */}
         <RevealSection visible={visibleSections >= 2} delay={0}>
           <div>
-            <h2 className="font-heading text-2xl font-bold text-white mb-6">
+            <h2 className="font-heading text-2xl font-bold text-slate-900 mb-6">
               Your Learning Roadmap
             </h2>
-            <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-4 overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 overflow-hidden shadow-sm">
               <RoadmapGraph roadmap={data.roadmap} onNodeClick={handleNodeClick} />
             </div>
-            {/* Key concepts */}
             {data.key_concepts && data.key_concepts.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">
-                <span className="text-sm text-slate-400">Key concepts:</span>
+                <span className="text-sm text-slate-500">Key concepts:</span>
                 {data.key_concepts.map((concept, i) => (
                   <span
                     key={i}
-                    className="text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-3 py-1 rounded-full"
+                    className="text-xs bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1 rounded-full"
                   >
                     {concept}
                   </span>
@@ -402,7 +496,7 @@ export default function Analysis() {
         {/* Section C: Resources */}
         <RevealSection visible={visibleSections >= 3} delay={0}>
           <div ref={resourcesRef}>
-            <h2 className="font-heading text-2xl font-bold text-white mb-6">
+            <h2 className="font-heading text-2xl font-bold text-slate-900 mb-6">
               Handpicked Resources — Just For You
             </h2>
             <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-thin">
@@ -437,7 +531,7 @@ export default function Analysis() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 3, type: 'spring', stiffness: 200 }}
         onClick={() => setChatOpen((prev) => !prev)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 shadow-lg shadow-cyan-500/25 flex items-center justify-center text-2xl z-40 hover:shadow-cyan-500/40 transition-shadow"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/25 flex items-center justify-center text-2xl z-40 hover:shadow-indigo-500/40 transition-shadow"
         style={{
           animation: chatOpen ? 'none' : 'chatPulse 2s ease-in-out infinite',
         }}
@@ -454,11 +548,10 @@ export default function Analysis() {
       {/* Chat Interface */}
       <ChatInterface userId={userId} isOpen={chatOpen} onClose={() => setChatOpen(false)} />
 
-      {/* Inline styles for chat pulse */}
       <style>{`
         @keyframes chatPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.4); }
-          50% { box-shadow: 0 0 0 12px rgba(14,165,233,0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(79,70,229,0.4); }
+          50% { box-shadow: 0 0 0 12px rgba(79,70,229,0); }
         }
 
         .scrollbar-thin::-webkit-scrollbar {
@@ -468,7 +561,7 @@ export default function Analysis() {
           background: transparent;
         }
         .scrollbar-thin::-webkit-scrollbar-thumb {
-          background: #334155;
+          background: #CBD5E1;
           border-radius: 3px;
         }
       `}</style>

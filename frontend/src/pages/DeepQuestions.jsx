@@ -22,21 +22,21 @@ function sliderColor(val) {
 function sliderGradient(val) {
   const pct = ((val - 1) / 9) * 100
   const c = sliderColor(val)
-  return `linear-gradient(to right, ${c} 0%, ${c} ${pct}%, #334155 ${pct}%, #334155 100%)`
+  return `linear-gradient(to right, ${c} 0%, ${c} ${pct}%, #E2E8F0 ${pct}%, #E2E8F0 100%)`
 }
 
 const pillBtn = (selected) =>
   `rounded-xl px-4 py-3 text-sm text-left cursor-pointer transition-all duration-200 border ${
     selected
-      ? 'bg-gradient-to-r from-cyan-500/20 to-violet-500/20 border-cyan-500 text-white shadow-lg shadow-cyan-500/10'
-      : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-cyan-500/50 hover:bg-cyan-500/5'
+      ? 'bg-indigo-50 border-indigo-500 text-slate-900 shadow-md'
+      : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50'
   }`
 
 const chipBtn = (selected) =>
   `rounded-xl px-4 py-2 text-sm cursor-pointer transition-all duration-200 border ${
     selected
-      ? 'bg-gradient-to-r from-cyan-500/20 to-violet-500/20 border-cyan-500 text-white'
-      : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-cyan-500/50'
+      ? 'bg-indigo-50 border-indigo-500 text-slate-900'
+      : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300'
   }`
 
 /* ─── Component ─── */
@@ -69,7 +69,7 @@ export default function DeepQuestions() {
   /* ─── Load resume + generate questions from Gemini ─── */
   useEffect(() => {
     if (!userId) {
-      setError('No user ID found. Please go back and upload your resume.')
+      setError('Please sign up or log in first.')
       setLoading(false)
       return
     }
@@ -211,7 +211,7 @@ export default function DeepQuestions() {
       smart_slider_with_calculator: renderSmartSlider,
     }
     const fn = renderers[currentQ.type]
-    if (!fn) return <p className="text-slate-400">Unknown question type: {currentQ.type}</p>
+    if (!fn) return <p className="text-slate-500">Unknown question type: {currentQ.type}</p>
     return fn()
   }
 
@@ -220,8 +220,8 @@ export default function DeepQuestions() {
     const selected = answers[currentKey] || ''
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-6">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-6">{currentQ.subtitle}</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {(currentQ.options || []).map((opt) => {
             const label = typeof opt === 'string' ? opt : opt.label
@@ -246,14 +246,14 @@ export default function DeepQuestions() {
 
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-6">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-6">{currentQ.subtitle}</p>
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {selected.map((s) => (
-              <span key={s} className="bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 rounded-full px-3 py-1 text-sm flex items-center gap-1.5">
+              <span key={s} className="bg-indigo-50 border border-indigo-200 text-indigo-600 rounded-full px-3 py-1 text-sm flex items-center gap-1.5">
                 {s}
-                <button onClick={() => setAnswer(currentKey, selected.filter((x) => x !== s))} className="hover:text-red-400 cursor-pointer">&times;</button>
+                <button onClick={() => setAnswer(currentKey, selected.filter((x) => x !== s))} className="hover:text-red-600 cursor-pointer">&times;</button>
               </span>
             ))}
           </div>
@@ -304,14 +304,14 @@ export default function DeepQuestions() {
 
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-6">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-6">{currentQ.subtitle}</p>
         <div className="flex flex-col gap-2">
           {ranked.map((label, idx) => {
             const item = itemMap[label] || { icon: '', label }
             const isTop = idx === 0
-            const rankColors = ['text-amber-400 border-amber-500/40 bg-amber-500/10', 'text-slate-300 border-slate-500/40 bg-slate-500/10', 'text-orange-400 border-orange-500/40 bg-orange-500/10']
-            const rankBorder = idx < 3 ? rankColors[idx] : 'text-slate-400 border-slate-700 bg-slate-800/50'
+            const rankColors = ['text-amber-600 border-amber-200 bg-amber-50', 'text-slate-600 border-slate-200 bg-slate-50', 'text-orange-600 border-orange-200 bg-orange-50']
+            const rankBorder = idx < 3 ? rankColors[idx] : 'text-slate-500 border-slate-200 bg-white'
 
             return (
               <motion.div
@@ -322,27 +322,27 @@ export default function DeepQuestions() {
               >
                 {/* Rank badge */}
                 <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                  idx === 0 ? 'bg-amber-500/20 text-amber-400' : idx === 1 ? 'bg-slate-600/30 text-slate-300' : idx === 2 ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-800 text-slate-500'
+                  idx === 0 ? 'bg-amber-50 text-amber-600' : idx === 1 ? 'bg-slate-100 text-slate-600' : idx === 2 ? 'bg-orange-50 text-orange-600' : 'bg-slate-50 text-slate-400'
                 }`}>
                   {idx + 1}
                 </span>
 
                 <span className="text-lg mr-1">{item.icon}</span>
-                <span className="text-white font-medium flex-1">{label}</span>
+                <span className="text-slate-900 font-medium flex-1">{label}</span>
 
                 {/* Up/Down buttons */}
                 <div className="flex flex-col gap-0.5">
                   <button
                     onClick={() => moveUp(idx)}
                     disabled={idx === 0}
-                    className={`w-6 h-6 rounded flex items-center justify-center text-xs cursor-pointer transition-colors ${idx === 0 ? 'text-slate-700' : 'text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10'}`}
+                    className={`w-6 h-6 rounded flex items-center justify-center text-xs cursor-pointer transition-colors ${idx === 0 ? 'text-slate-300' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'}`}
                   >
                     ▲
                   </button>
                   <button
                     onClick={() => moveDown(idx)}
                     disabled={idx >= ranked.length - 1}
-                    className={`w-6 h-6 rounded flex items-center justify-center text-xs cursor-pointer transition-colors ${idx >= ranked.length - 1 ? 'text-slate-700' : 'text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10'}`}
+                    className={`w-6 h-6 rounded flex items-center justify-center text-xs cursor-pointer transition-colors ${idx >= ranked.length - 1 ? 'text-slate-300' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'}`}
                   >
                     ▼
                   </button>
@@ -351,7 +351,7 @@ export default function DeepQuestions() {
             )
           })}
         </div>
-        <p className="text-slate-500 text-xs mt-3">Use the arrows to reorder. #1 = highest priority.</p>
+        <p className="text-slate-400 text-xs mt-3">Use the arrows to reorder. #1 = highest priority.</p>
       </div>
     )
   }
@@ -361,8 +361,8 @@ export default function DeepQuestions() {
     const selected = answers[currentKey] || ''
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-6">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-6">{currentQ.subtitle}</p>
         <div className="flex flex-col gap-4">
           {(currentQ.options || []).map((opt) => {
             const sel = selected === opt.label
@@ -371,18 +371,18 @@ export default function DeepQuestions() {
                 key={opt.label}
                 onClick={() => setAnswer(currentKey, opt.label)}
                 className={`relative w-full text-left rounded-xl p-4 cursor-pointer transition-all duration-200 border ${
-                  sel ? 'border-cyan-500 bg-cyan-500/10 shadow-lg shadow-cyan-500/10' : 'bg-slate-800/50 border-slate-700 hover:border-cyan-500/50 hover:bg-cyan-500/5'
+                  sel ? 'border-indigo-500 bg-indigo-50 shadow-md' : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{opt.icon}</span>
                   <div>
-                    <div className="text-white font-semibold">{opt.label}</div>
-                    <div className="text-slate-400 text-sm">{opt.description}</div>
+                    <div className="text-slate-900 font-semibold">{opt.label}</div>
+                    <div className="text-slate-500 text-sm">{opt.description}</div>
                   </div>
                 </div>
                 {sel && (
-                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center">
+                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                   </div>
                 )}
@@ -403,14 +403,14 @@ export default function DeepQuestions() {
 
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-4">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-4">{currentQ.subtitle}</p>
 
         {/* Average score badge */}
-        <div className="flex items-center gap-2 mb-6 bg-slate-800/50 rounded-xl px-4 py-2 border border-slate-700 w-fit">
-          <span className="text-slate-400 text-sm">Average:</span>
+        <div className="flex items-center gap-2 mb-6 bg-slate-50 rounded-xl px-4 py-2 border border-slate-200 w-fit">
+          <span className="text-slate-500 text-sm">Average:</span>
           <span className="text-2xl font-bold" style={{ color: sliderColor(parseFloat(avg)) }}>{avg}</span>
-          <span className="text-slate-500 text-sm">/10</span>
+          <span className="text-slate-400 text-sm">/10</span>
         </div>
 
         <div className="flex flex-col gap-8">
@@ -420,8 +420,8 @@ export default function DeepQuestions() {
               <div key={dim.key}>
                 <div className="flex items-center justify-between mb-1">
                   <div>
-                    <div className="text-white font-medium">{dim.label}</div>
-                    <div className="text-slate-400 text-sm">{dim.description}</div>
+                    <div className="text-slate-900 font-medium">{dim.label}</div>
+                    <div className="text-slate-500 text-sm">{dim.description}</div>
                   </div>
                   <span className="text-3xl font-bold ml-4 tabular-nums min-w-[2.5rem] text-right" style={{ color: sliderColor(val) }}>{val}</span>
                 </div>
@@ -431,7 +431,7 @@ export default function DeepQuestions() {
                   className="w-full h-2 rounded-full appearance-none cursor-pointer
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2
-                    [&::-webkit-slider-thumb]:border-cyan-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer"
+                    [&::-webkit-slider-thumb]:border-indigo-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer"
                   style={{ background: sliderGradient(val) }}
                 />
               </div>
@@ -451,11 +451,11 @@ export default function DeepQuestions() {
 
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-6">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-6">{currentQ.subtitle}</p>
 
         <div className="mb-6">
-          <div className="text-slate-300 text-sm font-medium mb-3">Resources you've tried:</div>
+          <div className="text-slate-600 text-sm font-medium mb-3">Resources you've tried:</div>
           <div className="flex flex-wrap gap-2">
             {(currentQ.resources || []).map((r) => {
               const sel = ans.triedResources.includes(r)
@@ -471,12 +471,12 @@ export default function DeepQuestions() {
 
         {showCompletion && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-            <div className="text-slate-300 text-sm font-medium mb-3">How far did you get?</div>
+            <div className="text-slate-600 text-sm font-medium mb-3">How far did you get?</div>
             <div className="flex flex-col gap-2">
               {(currentQ.completionOptions || []).map((cl) => (
                 <button key={cl} onClick={() => update({ completionLevel: cl })}
                   className={`text-left rounded-xl px-4 py-3 text-sm cursor-pointer transition-all duration-200 border ${
-                    ans.completionLevel === cl ? 'border-cyan-500 bg-cyan-500/10 text-white' : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-cyan-500/50'
+                    ans.completionLevel === cl ? 'border-indigo-500 bg-indigo-50 text-slate-900' : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300'
                   }`}>{cl}</button>
               ))}
             </div>
@@ -485,7 +485,7 @@ export default function DeepQuestions() {
 
         {showStop && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="text-slate-300 text-sm font-medium mb-3">What caused you to stop?</div>
+            <div className="text-slate-600 text-sm font-medium mb-3">What caused you to stop?</div>
             <div className="flex flex-wrap gap-2">
               {(currentQ.stopReasons || []).map((sr) => {
                 const sel = (ans.stopReasons || []).includes(sr)
@@ -511,8 +511,8 @@ export default function DeepQuestions() {
 
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-6">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-6">{currentQ.subtitle}</p>
 
         <div className="flex flex-col gap-5 mb-6">
           {[
@@ -521,14 +521,14 @@ export default function DeepQuestions() {
             { key: 'alreadyTried', label: 'What have you tried?', ph: ph.alreadyTried },
           ].map((field) => (
             <div key={field.key}>
-              <label className="text-sm text-slate-300 font-medium mb-1 block">{field.label}</label>
+              <label className="text-sm text-slate-600 font-medium mb-1 block">{field.label}</label>
               <div className="relative">
                 <textarea rows={2} maxLength={300} placeholder={field.ph || ''}
                   value={ans[field.key]}
                   onChange={(e) => update({ [field.key]: e.target.value })}
-                  className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all resize-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all resize-none"
                 />
-                <span className="absolute bottom-2 right-3 text-xs text-slate-500">{ans[field.key].length}/300</span>
+                <span className="absolute bottom-2 right-3 text-xs text-slate-400">{ans[field.key].length}/300</span>
               </div>
             </div>
           ))}
@@ -542,7 +542,7 @@ export default function DeepQuestions() {
                 const next = sel ? ans.quickTags.filter((x) => x !== tag) : [...(ans.quickTags || []), tag]
                 update({ quickTags: next })
               }} className={`rounded-xl px-3 py-1.5 text-xs cursor-pointer transition-all duration-200 border ${
-                sel ? 'bg-cyan-500/20 border-cyan-500 text-white' : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-cyan-500/50'
+                sel ? 'bg-indigo-50 border-indigo-500 text-slate-900' : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300'
               }`}>{tag}</button>
             )
           })}
@@ -557,8 +557,8 @@ export default function DeepQuestions() {
 
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-6">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-6">{currentQ.subtitle}</p>
         <div className="flex flex-col gap-3">
           {(currentQ.toggles || []).map((toggle) => {
             const isOn = selected.includes(toggle)
@@ -571,24 +571,24 @@ export default function DeepQuestions() {
                 }}
                 className={`flex items-center gap-4 rounded-xl px-4 py-3.5 text-left cursor-pointer transition-all duration-200 border ${
                   isOn
-                    ? 'border-cyan-500/50 bg-cyan-500/5'
-                    : 'border-slate-700 bg-slate-800/30 hover:border-slate-600'
+                    ? 'border-indigo-300 bg-indigo-50'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
                 }`}
               >
                 {/* Toggle switch */}
-                <div className={`w-11 h-6 rounded-full flex-shrink-0 relative transition-colors duration-200 ${isOn ? 'bg-cyan-500' : 'bg-slate-700'}`}>
+                <div className={`w-11 h-6 rounded-full flex-shrink-0 relative transition-colors duration-200 ${isOn ? 'bg-indigo-600' : 'bg-slate-300'}`}>
                   <motion.div
                     className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow"
                     animate={{ left: isOn ? '22px' : '2px' }}
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 </div>
-                <span className={`text-sm ${isOn ? 'text-white' : 'text-slate-400'}`}>{toggle}</span>
+                <span className={`text-sm ${isOn ? 'text-slate-900' : 'text-slate-500'}`}>{toggle}</span>
               </button>
             )
           })}
         </div>
-        <p className="text-slate-500 text-xs mt-3">{selected.length} of {(currentQ.toggles || []).length} selected</p>
+        <p className="text-slate-400 text-xs mt-3">{selected.length} of {(currentQ.toggles || []).length} selected</p>
       </div>
     )
   }
@@ -604,8 +604,8 @@ export default function DeepQuestions() {
 
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-6">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-6">{currentQ.subtitle}</p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           {goals.map((gt) => {
@@ -613,10 +613,10 @@ export default function DeepQuestions() {
             return (
               <button key={gt.label} onClick={() => update({ type: gt.label, detail: '' })}
                 className={`rounded-xl p-4 text-left cursor-pointer transition-all duration-200 border ${
-                  selected ? 'border-cyan-500 bg-cyan-500/10 shadow-lg shadow-cyan-500/10' : 'bg-slate-800/50 border-slate-700 hover:border-cyan-500/50 hover:bg-cyan-500/5'
+                  selected ? 'border-indigo-500 bg-indigo-50 shadow-md' : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
                 }`}>
                 <span className="text-2xl block mb-1">{gt.icon}</span>
-                <span className="text-white text-sm font-medium">{gt.label}</span>
+                <span className="text-slate-900 text-sm font-medium">{gt.label}</span>
               </button>
             )
           })}
@@ -629,13 +629,13 @@ export default function DeepQuestions() {
               <textarea rows={3} placeholder={followUp.placeholder}
                 value={ans.detail}
                 onChange={(e) => update({ detail: e.target.value })}
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all resize-none"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all resize-none"
               />
             ) : (
               <input type="text" placeholder={followUp.placeholder}
                 value={ans.detail}
                 onChange={(e) => update({ detail: e.target.value })}
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all"
               />
             )}
           </motion.div>
@@ -659,43 +659,43 @@ export default function DeepQuestions() {
 
     // Effort rating
     let effortLabel, effortColor
-    if (totalHours >= 200) { effortLabel = 'Solid commitment'; effortColor = 'text-green-400' }
-    else if (totalHours >= 100) { effortLabel = 'Enough for focused learning'; effortColor = 'text-cyan-400' }
-    else if (totalHours >= 50) { effortLabel = 'Tight — stay consistent'; effortColor = 'text-amber-400' }
-    else { effortLabel = 'Very tight — every hour counts'; effortColor = 'text-red-400' }
+    if (totalHours >= 200) { effortLabel = 'Solid commitment'; effortColor = 'text-emerald-600' }
+    else if (totalHours >= 100) { effortLabel = 'Enough for focused learning'; effortColor = 'text-indigo-600' }
+    else if (totalHours >= 50) { effortLabel = 'Tight — stay consistent'; effortColor = 'text-amber-600' }
+    else { effortLabel = 'Very tight — every hour counts'; effortColor = 'text-red-600' }
 
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">{currentQ.question}</h2>
-        <p className="text-slate-400 mb-8">{currentQ.subtitle}</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">{currentQ.question}</h2>
+        <p className="text-slate-500 mb-8">{currentQ.subtitle}</p>
 
         {/* Hours per week */}
         <div className="mb-8">
-          <div className="text-slate-300 text-sm font-medium mb-3">Hours per week</div>
+          <div className="text-slate-600 text-sm font-medium mb-3">Hours per week</div>
           <div className="flex items-center gap-4 mb-2">
             <button onClick={() => update({ hoursPerWeek: Math.max(hoursRange[0], ans.hoursPerWeek - 1) })}
-              className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 text-white text-xl flex items-center justify-center cursor-pointer hover:border-cyan-500/50 transition-all">-</button>
-            <span className="text-5xl font-bold text-white tabular-nums min-w-[4rem] text-center">{ans.hoursPerWeek}</span>
+              className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-900 text-xl flex items-center justify-center cursor-pointer hover:border-indigo-300 transition-all">-</button>
+            <span className="text-5xl font-bold text-slate-900 tabular-nums min-w-[4rem] text-center">{ans.hoursPerWeek}</span>
             <button onClick={() => update({ hoursPerWeek: Math.min(hoursRange[1], ans.hoursPerWeek + 1) })}
-              className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 text-white text-xl flex items-center justify-center cursor-pointer hover:border-cyan-500/50 transition-all">+</button>
+              className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-900 text-xl flex items-center justify-center cursor-pointer hover:border-indigo-300 transition-all">+</button>
           </div>
         </div>
 
         {/* Deadline */}
         <div className="mb-8">
-          <div className="text-slate-300 text-sm font-medium mb-3">Deadline</div>
+          <div className="text-slate-600 text-sm font-medium mb-3">Deadline</div>
           <input type="range" min={0} max={deadlineOptions.length - 1}
             value={deadlineIdx >= 0 ? deadlineIdx : 4}
             onChange={(e) => update({ deadline: deadlineOptions[parseInt(e.target.value)] })}
             className="w-full h-2 rounded-full appearance-none cursor-pointer
               [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
               [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2
-              [&::-webkit-slider-thumb]:border-cyan-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer"
+              [&::-webkit-slider-thumb]:border-indigo-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer"
             style={{
-              background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((deadlineIdx >= 0 ? deadlineIdx : 4) / (deadlineOptions.length - 1)) * 100}%, #334155 ${((deadlineIdx >= 0 ? deadlineIdx : 4) / (deadlineOptions.length - 1)) * 100}%, #334155 100%)`,
+              background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${((deadlineIdx >= 0 ? deadlineIdx : 4) / (deadlineOptions.length - 1)) * 100}%, #E2E8F0 ${((deadlineIdx >= 0 ? deadlineIdx : 4) / (deadlineOptions.length - 1)) * 100}%, #E2E8F0 100%)`,
             }}
           />
-          <div className="flex justify-between mt-2 text-xs text-slate-500">
+          <div className="flex justify-between mt-2 text-xs text-slate-400">
             {deadlineOptions.map((d) => <span key={d}>{d}</span>)}
           </div>
         </div>
@@ -704,13 +704,13 @@ export default function DeepQuestions() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-slate-800/50 border border-slate-700 rounded-2xl p-5"
+          className="bg-slate-50 border border-slate-200 rounded-2xl p-5"
         >
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-4xl font-bold text-white tabular-nums">{totalHours}</span>
-            <span className="text-slate-400">total hours</span>
+            <span className="text-4xl font-bold text-slate-900 tabular-nums">{totalHours}</span>
+            <span className="text-slate-500">total hours</span>
           </div>
-          <p className="text-slate-400 text-sm mb-2">
+          <p className="text-slate-500 text-sm mb-2">
             {ans.hoursPerWeek} hrs/week &times; {deadlineWeeks} weeks = {totalHours} hours by {ans.deadline}
           </p>
           <div className={`text-sm font-semibold ${effortColor}`}>
@@ -739,35 +739,35 @@ export default function DeepQuestions() {
 
     return (
       <div>
-        <h2 className="font-heading text-2xl font-bold text-white mb-2">Here's what we know about you</h2>
-        <p className="text-slate-400 mb-6">Review your profile before we generate your plan</p>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 mb-2">Here's what we know about you</h2>
+        <p className="text-slate-500 mb-6">Review your profile before we generate your plan</p>
 
-        <div className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6 space-y-5">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
           {q1 && (
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">Topic</span>
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Topic</span>
               <div className="mt-1">
-                <span className="inline-block bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 rounded-full px-4 py-1 text-sm font-medium shadow-[0_0_12px_rgba(0,212,255,0.15)]">{q1}</span>
+                <span className="inline-block bg-indigo-50 border border-indigo-200 text-indigo-600 rounded-full px-4 py-1 text-sm font-medium">{q1}</span>
               </div>
             </div>
           )}
 
           {q2.length > 0 && (
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">Focus Areas</span>
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Focus Areas</span>
               <div className="flex flex-wrap gap-2 mt-1">
-                {q2.map((s) => <span key={s} className="bg-violet-500/15 border border-violet-500/30 text-violet-300 rounded-full px-3 py-1 text-xs">{s}</span>)}
+                {q2.map((s) => <span key={s} className="bg-violet-50 border border-violet-200 text-violet-600 rounded-full px-3 py-1 text-xs">{s}</span>)}
               </div>
             </div>
           )}
 
           {q3.length > 0 && (
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">Priorities</span>
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Priorities</span>
               <div className="flex flex-wrap gap-2 mt-1">
                 {q3.slice(0, 3).map((p, i) => (
                   <span key={p} className={`rounded-full px-3 py-1 text-xs border ${
-                    i === 0 ? 'bg-amber-500/15 border-amber-500/30 text-amber-300' : 'bg-slate-700/50 border-slate-600 text-slate-300'
+                    i === 0 ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-slate-50 border-slate-200 text-slate-600'
                   }`}>#{i + 1} {p}</span>
                 ))}
               </div>
@@ -776,21 +776,21 @@ export default function DeepQuestions() {
 
           {q4 && (
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">Level</span>
-              <div className="mt-1 text-white font-medium">{q4}</div>
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Level</span>
+              <div className="mt-1 text-slate-900 font-medium">{q4}</div>
             </div>
           )}
 
           {q5Dims.length > 0 && (
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">Self Assessment</span>
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Self Assessment</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                 {q5Dims.map((dim) => {
                   const val = q5[dim.key] ?? 5
                   return (
                     <div key={dim.key} className="flex items-center gap-2">
-                      <span className="text-xs text-slate-400 w-24 truncate">{dim.label}</span>
-                      <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <span className="text-xs text-slate-500 w-24 truncate">{dim.label}</span>
+                      <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                         <motion.div initial={{ width: 0 }} animate={{ width: `${(val / 10) * 100}%` }} transition={{ duration: 0.6 }} className="h-full rounded-full" style={{ backgroundColor: sliderColor(val) }} />
                       </div>
                       <span className="text-xs font-bold tabular-nums" style={{ color: sliderColor(val) }}>{val}</span>
@@ -803,33 +803,33 @@ export default function DeepQuestions() {
 
           {q8.length > 0 && (
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">Learning Profile</span>
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Learning Profile</span>
               <div className="flex flex-wrap gap-2 mt-1">
-                {q8.slice(0, 4).map((flag) => <span key={flag} className="bg-slate-700/50 border border-slate-600 text-slate-300 rounded-full px-3 py-1 text-xs">{flag.length > 40 ? flag.slice(0, 40) + '...' : flag}</span>)}
-                {q8.length > 4 && <span className="text-slate-500 text-xs">+{q8.length - 4} more</span>}
+                {q8.slice(0, 4).map((flag) => <span key={flag} className="bg-slate-50 border border-slate-200 text-slate-600 rounded-full px-3 py-1 text-xs">{flag.length > 40 ? flag.slice(0, 40) + '...' : flag}</span>)}
+                {q8.length > 4 && <span className="text-slate-400 text-xs">+{q8.length - 4} more</span>}
               </div>
             </div>
           )}
 
           {q9.type && (
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">Goal</span>
-              <div className="mt-1 text-white font-medium">{q9.type}</div>
-              {q9.detail && <div className="text-slate-400 text-sm">{q9.detail}</div>}
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Goal</span>
+              <div className="mt-1 text-slate-900 font-medium">{q9.type}</div>
+              {q9.detail && <div className="text-slate-500 text-sm">{q9.detail}</div>}
             </div>
           )}
 
           {q10.hoursPerWeek && (
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">Time Commitment</span>
-              <div className="mt-1 text-white font-medium">{q10.hoursPerWeek} hrs/week by {q10.deadline}</div>
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Time Commitment</span>
+              <div className="mt-1 text-slate-900 font-medium">{q10.hoursPerWeek} hrs/week by {q10.deadline}</div>
             </div>
           )}
 
           {(q7.trying || q7.notWorking) && (
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">Where You're Stuck</span>
-              <div className="mt-1 text-slate-300 text-sm">
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Where You're Stuck</span>
+              <div className="mt-1 text-slate-600 text-sm">
                 {q7.trying && <span>Trying: {q7.trying.slice(0, 120)}{q7.trying.length > 120 ? '...' : ''}</span>}
                 {q7.notWorking && <span className="block">Issue: {q7.notWorking.slice(0, 120)}{q7.notWorking.length > 120 ? '...' : ''}</span>}
               </div>
@@ -839,11 +839,11 @@ export default function DeepQuestions() {
 
         <div className="flex flex-col sm:flex-row gap-3 mt-8">
           <button onClick={() => { setDirection(-1); setCurrentQuestion(0) }}
-            className="flex-1 px-6 py-4 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:border-slate-500 hover:text-white transition-all cursor-pointer">
+            className="flex-1 px-6 py-4 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:border-slate-400 hover:text-slate-900 transition-all cursor-pointer">
             Edit Answers
           </button>
           <button onClick={handleSubmit}
-            className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-white font-semibold text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.02] hover:shadow-cyan-500/40 active:scale-[0.98] transition-all cursor-pointer">
+            className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold text-lg shadow-md hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer">
             Generate My Learning Plan &rarr;
           </button>
         </div>
@@ -860,14 +860,14 @@ export default function DeepQuestions() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4">
         <div className="flex flex-col items-center gap-6">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full border-4 border-slate-700 border-t-cyan-500 animate-spin" />
+            <div className="w-16 h-16 rounded-full border-4 border-slate-200 border-t-indigo-600 animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 rounded-full border-4 border-slate-700 border-b-violet-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+              <div className="w-8 h-8 rounded-full border-4 border-slate-200 border-b-violet-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
             </div>
           </div>
           <div className="text-center">
-            <h2 className="font-heading text-xl font-bold text-white mb-2">Analyzing your resume...</h2>
-            <p className="text-slate-400 text-sm">Gemini is crafting personalized questions based on your background</p>
+            <h2 className="font-heading text-xl font-bold text-slate-900 mb-2">Analyzing your resume...</h2>
+            <p className="text-slate-500 text-sm">Gemini is crafting personalized questions based on your background</p>
           </div>
         </div>
       </div>
@@ -877,11 +877,11 @@ export default function DeepQuestions() {
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4">
-        <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 max-w-md text-center">
-          <h2 className="font-heading text-xl font-bold text-white mb-2">Something went wrong</h2>
-          <p className="text-slate-400 text-sm mb-6">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md text-center">
+          <h2 className="font-heading text-xl font-bold text-slate-900 mb-2">Something went wrong</h2>
+          <p className="text-slate-500 text-sm mb-6">{error}</p>
           <button onClick={() => window.location.reload()}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-white font-semibold cursor-pointer">Try Again</button>
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold cursor-pointer">Try Again</button>
         </div>
       </div>
     )
@@ -900,13 +900,13 @@ export default function DeepQuestions() {
         {/* Resume banner */}
         {resumeData && resumeData.name && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-6 bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+            className="mb-6 bg-white border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             </div>
             <div className="min-w-0">
-              <p className="text-sm text-white font-medium truncate">Resume loaded: {resumeData.name}</p>
-              <p className="text-xs text-slate-400 truncate">{resumeData.role} &middot; {(resumeData.skills || []).slice(0, 4).join(', ')}</p>
+              <p className="text-sm text-slate-900 font-medium truncate">Resume loaded: {resumeData.name}</p>
+              <p className="text-xs text-slate-500 truncate">{resumeData.role} &middot; {(resumeData.skills || []).slice(0, 4).join(', ')}</p>
             </div>
           </motion.div>
         )}
@@ -914,11 +914,11 @@ export default function DeepQuestions() {
         {/* Progress bar */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-400">{isReview ? 'Review' : `Question ${currentQuestion + 1} of ${totalQuestions}`}</span>
-            <span className="text-sm text-slate-500">{Math.round(((currentQuestion + 1) / (totalQuestions + 1)) * 100)}%</span>
+            <span className="text-sm text-slate-500">{isReview ? 'Review' : `Question ${currentQuestion + 1} of ${totalQuestions}`}</span>
+            <span className="text-sm text-slate-400">{Math.round(((currentQuestion + 1) / (totalQuestions + 1)) * 100)}%</span>
           </div>
-          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-            <motion.div className="h-full bg-gradient-to-r from-cyan-500 to-violet-500 rounded-full" initial={false}
+          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <motion.div className="h-full bg-gradient-to-r from-indigo-600 to-violet-500 rounded-full" initial={false}
               animate={{ width: `${((currentQuestion + 1) / (totalQuestions + 1)) * 100}%` }}
               transition={{ duration: 0.4, ease: 'easeInOut' }} />
           </div>
@@ -928,7 +928,7 @@ export default function DeepQuestions() {
         {answerChips.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {answerChips.map((chip, i) => (
-              <span key={i} className="bg-slate-800/50 border border-slate-700 text-slate-400 rounded-full px-3 py-1 text-xs">
+              <span key={i} className="bg-slate-50 border border-slate-200 text-slate-500 rounded-full px-3 py-1 text-xs">
                 {chip.length > 50 ? chip.slice(0, 50) + '...' : chip}
               </span>
             ))}
@@ -940,7 +940,7 @@ export default function DeepQuestions() {
           <motion.div key={currentQuestion} custom={direction} variants={slideVariants}
             initial="enter" animate="center" exit="exit"
             transition={{ duration: 0.35, ease: 'easeInOut' }}
-            className="bg-[#0f172a] border border-[#1e293b] rounded-2xl p-6 md:p-8 min-h-[400px]">
+            className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 min-h-[400px]">
             {isReview ? renderReview() : renderByType()}
           </motion.div>
         </AnimatePresence>
@@ -950,13 +950,13 @@ export default function DeepQuestions() {
           <div className="flex justify-between mt-6">
             <button onClick={goPrev} disabled={currentQuestion === 0}
               className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 cursor-pointer ${
-                currentQuestion === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 border border-slate-700 hover:border-slate-500 hover:text-white'
+                currentQuestion === 0 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 border border-slate-200 hover:border-slate-400 hover:text-slate-900'
               }`}>&larr; Back</button>
             <button onClick={goNext} disabled={!canAdvance}
               className={`px-8 py-3 rounded-xl font-semibold transition-all duration-200 cursor-pointer ${
                 canAdvance
-                  ? 'bg-gradient-to-r from-cyan-500 to-violet-600 text-white shadow-lg shadow-cyan-500/25 hover:scale-[1.03] hover:shadow-cyan-500/40 active:scale-[0.97]'
-                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md hover:scale-[1.03] hover:shadow-lg active:scale-[0.97]'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
               }`}>{currentQuestion === totalQuestions - 1 ? 'Review' : 'Continue'} &rarr;</button>
           </div>
         )}

@@ -1,5 +1,5 @@
 import time
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request as FastAPIRequest
 from pydantic import BaseModel
 from typing import Optional
 from models.schemas import GenerateRequest
@@ -14,7 +14,7 @@ class GenerateWithProfileRequest(BaseModel):
 
 
 @router.post("/generate")
-async def generate(request: GenerateWithProfileRequest):
+async def generate(request: GenerateWithProfileRequest, http_request: FastAPIRequest):
     try:
         profile = request.profile or {}
 
@@ -76,7 +76,17 @@ async def generate(request: GenerateWithProfileRequest):
         narration = diagnosis.get("voice_narration", "")
         if narration:
             try:
-                audio_url = elevenlabs_service.text_to_speech(narration)
+                # On Cloud Run, base_url may be internal (http://localhost:8080)
+                # Use X-Forwarded headers to get the real public URL
+                forwarded_proto = http_request.headers.get("x-forwarded-proto", "")
+                forwarded_host = http_request.headers.get("x-forwarded-host", "") or http_request.headers.get("host", "")
+                if forwarded_proto and forwarded_host:
+                    base_url = f"{forwarded_proto}://{forwarded_host}"
+                else:
+                    base_url = str(http_request.base_url).rstrip("/")
+                print(f"Audio base_url: {base_url}")
+                audio_url = elevenlabs_service.text_to_speech(narration, base_url)
+                print(f"Audio URL generated: {audio_url}")
             except Exception as voice_err:
                 print(f"Voice generation failed: {voice_err}")
 

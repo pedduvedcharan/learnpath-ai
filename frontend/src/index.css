@@ -3,9 +3,9 @@
 @import '@xyflow/react/dist/style.css';
 
 body {
-  background-color: #030712;
+  background-color: #FAFBFC;
   font-family: 'DM Sans', sans-serif;
-  color: #f8fafc;
+  color: #0F172A;
   overflow-x: hidden;
   min-height: 100vh;
 }
@@ -20,35 +20,25 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #F1F5F9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #CBD5E1;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #94A3B8;
 }
 
 /* Animated gradient mesh */
 @keyframes gradientMesh {
-  0% {
-    background-position: 0% 50%;
-  }
-  25% {
-    background-position: 50% 0%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  75% {
-    background-position: 50% 100%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  25% { background-position: 50% 0%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 50% 100%; }
+  100% { background-position: 0% 50%; }
 }
 
 .animate-gradient-mesh {
@@ -58,80 +48,38 @@ body {
 
 /* Particle float animation */
 @keyframes particleFloat {
-  0% {
-    transform: translateY(100vh) rotate(0deg);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-10vh) rotate(360deg);
-    opacity: 0;
-  }
-}
-
-.animate-particle-float {
-  animation: particleFloat 15s linear infinite;
+  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
 }
 
 /* Pulse glow animation */
 @keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(6, 182, 212, 0.4), 0 0 20px rgba(6, 182, 212, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 16px rgba(6, 182, 212, 0.6), 0 0 40px rgba(6, 182, 212, 0.2);
-  }
+  0%, 100% { box-shadow: 0 0 8px rgba(79, 70, 229, 0.3), 0 0 20px rgba(79, 70, 229, 0.08); }
+  50% { box-shadow: 0 0 16px rgba(79, 70, 229, 0.5), 0 0 40px rgba(79, 70, 229, 0.15); }
 }
 
 .animate-pulse-glow {
   animation: pulseGlow 2s ease-in-out infinite;
 }
 
-/* Shimmer animation for loading skeletons */
+/* Shimmer animation */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* Noise texture overlay */
-.noise-overlay::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 50;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
-
 /* Bounce chevron */
 @keyframes bounceChevron {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(10px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
 }
 
 .animate-bounce-chevron {

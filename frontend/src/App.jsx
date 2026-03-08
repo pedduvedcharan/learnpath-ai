@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar'
 import Welcome from './pages/Welcome'
+import Auth from './pages/Auth'
 import Details from './pages/Details'
 import ResumeUpload from './pages/ResumeUpload'
 import DeepQuestions from './pages/DeepQuestions'
@@ -31,71 +32,31 @@ function AnimatedPage({ children }) {
 
 export default function App() {
   const location = useLocation()
-  const showNavbar = location.pathname !== '/'
+  const showNavbar = location.pathname !== '/' && location.pathname !== '/auth'
 
   return (
-    <div className="noise-overlay">
+    <div>
       <Toaster
         position="top-right"
         toastOptions={{
           style: {
-            background: '#1e293b',
-            color: '#f8fafc',
-            border: '1px solid #334155',
+            background: '#FFFFFF',
+            color: '#0F172A',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
           },
         }}
       />
       {showNavbar && <Navbar />}
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route
-            path="/"
-            element={
-              <AnimatedPage>
-                <Welcome />
-              </AnimatedPage>
-            }
-          />
-          <Route
-            path="/details"
-            element={
-              <AnimatedPage>
-                <Details />
-              </AnimatedPage>
-            }
-          />
-          <Route
-            path="/resume"
-            element={
-              <AnimatedPage>
-                <ResumeUpload />
-              </AnimatedPage>
-            }
-          />
-          <Route
-            path="/questions"
-            element={
-              <AnimatedPage>
-                <DeepQuestions />
-              </AnimatedPage>
-            }
-          />
-          <Route
-            path="/need"
-            element={
-              <AnimatedPage>
-                <WhatDoYouNeed />
-              </AnimatedPage>
-            }
-          />
-          <Route
-            path="/analysis"
-            element={
-              <AnimatedPage>
-                <AnalysisPage />
-              </AnimatedPage>
-            }
-          />
+          <Route path="/" element={<AnimatedPage><Welcome /></AnimatedPage>} />
+          <Route path="/auth" element={<AnimatedPage><Auth /></AnimatedPage>} />
+          <Route path="/details" element={<AnimatedPage><Details /></AnimatedPage>} />
+          <Route path="/resume" element={<AnimatedPage><ResumeUpload /></AnimatedPage>} />
+          <Route path="/questions" element={<AnimatedPage><DeepQuestions /></AnimatedPage>} />
+          <Route path="/need" element={<AnimatedPage><WhatDoYouNeed /></AnimatedPage>} />
+          <Route path="/analysis" element={<AnimatedPage><AnalysisPage /></AnimatedPage>} />
         </Routes>
       </AnimatePresence>
     </div>

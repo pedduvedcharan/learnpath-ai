@@ -20,7 +20,7 @@ steps:
       - 'us-central1'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'GEMINI_API_KEY=${_GEMINI_API_KEY},YOUTUBE_API_KEY=${_YOUTUBE_API_KEY},ELEVENLABS_API_KEY=${_ELEVENLABS_API_KEY},MONGODB_URI=${_MONGODB_URI}'
+      - 'GEMINI_API_KEY=${_GEMINI_API_KEY},YOUTUBE_API_KEY=${_YOUTUBE_API_KEY},ELEVENLABS_API_KEY=${_ELEVENLABS_API_KEY},MONGODB_URI=${_MONGODB_URI},SENDGRID_API_KEY=${_SENDGRID_API_KEY},FROM_EMAIL=${_FROM_EMAIL},FRONTEND_URL=${_FRONTEND_URL}'
 
   # Step 3: Get backend URL and build frontend with it
   - name: 'gcr.io/cloud-builders/gcloud'

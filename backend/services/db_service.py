@@ -1,4 +1,5 @@
 import os
+import certifi
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from bson import ObjectId
@@ -16,11 +17,36 @@ _indexes_created = False
 def get_db():
     global _client, _db, _indexes_created
     if _db is None:
-        _client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+        _client = MongoClient(
+            MONGODB_URI,
+            serverSelectionTimeoutMS=30000,
+            connectTimeoutMS=30000,
+            socketTimeoutMS=30000,
+            retryWrites=True,
+            tls=True,
+            tlsCAFile=certifi.where(),
+        )
+        # Test connection immediately
+        try:
+            _client.admin.command("ping")
+            print("MongoDB connected successfully")
+        except Exception as e:
+            print(f"MongoDB ping failed: {e}")
+            # Reset and retry with fresh client
+            _client = MongoClient(
+                MONGODB_URI,
+                serverSelectionTimeoutMS=30000,
+                connectTimeoutMS=30000,
+                socketTimeoutMS=30000,
+                retryWrites=True,
+                tls=True,
+                tlsCAFile=certifi.where(),
+            )
         _db = _client["learnpath_ai"]
     if not _indexes_created:
         try:
             _db["users"].create_index("user_id")
+            _db["users"].create_index("email", unique=True, sparse=True)
             _db["learning_profiles"].create_index("user_id")
             _db["sessions"].create_index("user_id")
             _db["chat_history"].create_index("user_id")
@@ -102,3 +128,34 @@ def get_chat_history(user_id: str) -> list:
     if doc and "messages" in doc:
         return doc["messages"]
     return []
+
+
+def find_user_by_email(email: str) -> dict:
+    user = get_db()["users"].find_one({"email": email.lower().strip()})
+    if user:
+        user["_id"] = str(user["_id"])
+    return user
+
+
+def get_user_completion_status(user_id: str) -> dict:
+    """Check how far a user has progressed through the flow."""
+    status = {
+        "has_profile": False,
+        "has_questions": False,
+        "has_need": False,
+        "has_session": False,
+    }
+    try:
+        user = get_user(user_id)
+        if user:
+            status["has_questions"] = bool(user.get("generated_questions"))
+            status["has_need"] = bool(user.get("need_type"))
+
+        profile = get_learning_profile(user_id)
+        status["has_profile"] = bool(profile)
+
+        session = get_latest_session(user_id)
+        status["has_session"] = bool(session)
+    except Exception as e:
+        print(f"Completion status error: {e}")
+    return status
