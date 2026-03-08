@@ -31,8 +31,8 @@ def get_db():
 
 
 def save_user(user_data: dict) -> str:
-    user_data["created_at"] = datetime.utcnow()
-    result = get_db()["users"].insert_one(user_data)
+    doc = {**user_data, "created_at": datetime.utcnow()}
+    result = get_db()["users"].insert_one(doc)
     return str(result.inserted_id)
 
 
@@ -44,13 +44,13 @@ def get_user(user_id: str) -> dict:
 
 
 def save_learning_profile(profile_data: dict) -> str:
-    profile_data["created_at"] = datetime.utcnow()
+    doc = {**profile_data, "created_at": datetime.utcnow()}
     db = get_db()
-    existing = db["learning_profiles"].find_one({"user_id": profile_data["user_id"]})
+    existing = db["learning_profiles"].find_one({"user_id": doc["user_id"]})
     if existing:
-        db["learning_profiles"].update_one({"user_id": profile_data["user_id"]}, {"$set": profile_data})
+        db["learning_profiles"].update_one({"user_id": doc["user_id"]}, {"$set": doc})
         return str(existing["_id"])
-    result = db["learning_profiles"].insert_one(profile_data)
+    result = db["learning_profiles"].insert_one(doc)
     return str(result.inserted_id)
 
 
@@ -62,8 +62,8 @@ def get_learning_profile(user_id: str) -> dict:
 
 
 def save_session(session_data: dict) -> str:
-    session_data["created_at"] = datetime.utcnow()
-    result = get_db()["sessions"].insert_one(session_data)
+    doc = {**session_data, "created_at": datetime.utcnow()}
+    result = get_db()["sessions"].insert_one(doc)
     return str(result.inserted_id)
 
 
