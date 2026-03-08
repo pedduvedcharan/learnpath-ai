@@ -82,6 +82,45 @@ async def get_profile(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class GenerateQuestionsRequest(BaseModel):
+    user_id: str
+
+
+@router.post("/generate-questions")
+async def generate_questions(request: GenerateQuestionsRequest):
+    try:
+        user = db_service.get_user(request.user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        questions = gemini_service.generate_dynamic_questions(user)
+
+        db_service.update_user(request.user_id, {"generated_questions": questions})
+
+        return {"success": True, "questions": questions}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/questions/{user_id}")
+async def get_questions(user_id: str):
+    try:
+        user = db_service.get_user(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        questions = user.get("generated_questions")
+        if not questions:
+            return {"success": True, "questions": None}
+        return {"success": True, "questions": questions}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class SaveNeedRequest(BaseModel):
     user_id: str
     need_type: str

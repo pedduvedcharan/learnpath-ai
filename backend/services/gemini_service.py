@@ -82,6 +82,273 @@ Return ONLY the JSON object. No markdown, no backticks, no explanation."""
         }
 
 
+def _get_fallback_questions() -> dict:
+    """Return a universal fallback question set if Gemini fails."""
+    return {
+        "q1": {
+            "question": "What do you want to master?",
+            "subtitle": "Pick the area you're focusing on right now",
+            "type": "single_select_grid",
+            "options": [
+                {"label": "Programming", "icon": "💻"}, {"label": "Data Science", "icon": "📊"},
+                {"label": "Design", "icon": "🎨"}, {"label": "Marketing", "icon": "📣"},
+                {"label": "Finance", "icon": "💰"}, {"label": "Management", "icon": "📋"},
+                {"label": "Writing", "icon": "✍️"}, {"label": "Healthcare", "icon": "🏥"},
+                {"label": "Engineering", "icon": "⚙️"}, {"label": "Communication", "icon": "🗣️"}
+            ]
+        },
+        "q2": {
+            "question": "Which specific areas interest you?",
+            "subtitle": "Select all that apply (up to 4)",
+            "type": "multi_select_chips",
+            "subtopicMap": {
+                "Programming": ["Web Development", "Mobile Apps", "Backend", "DevOps"],
+                "Data Science": ["Machine Learning", "Analytics", "Visualization", "Statistics"],
+                "Design": ["UI/UX", "Graphic Design", "Product Design", "Branding"],
+                "Marketing": ["Digital Marketing", "SEO", "Content Strategy", "Social Media"],
+                "Finance": ["Accounting", "Investment", "Financial Planning", "Risk Management"],
+                "Management": ["Project Management", "Leadership", "Strategy", "Operations"],
+                "Writing": ["Technical Writing", "Creative Writing", "Copywriting", "Journalism"],
+                "Healthcare": ["Clinical Skills", "Research", "Public Health", "Administration"],
+                "Engineering": ["Mechanical", "Electrical", "Civil", "Chemical"],
+                "Communication": ["Public Speaking", "Negotiation", "Presentation", "Networking"]
+            }
+        },
+        "q3": {
+            "question": "Rank what matters most to you right now",
+            "subtitle": "Drag or tap to reorder — #1 is top priority",
+            "type": "ranked_priority",
+            "items": [
+                {"icon": "🎯", "label": "Deep understanding of fundamentals"},
+                {"icon": "🛠️", "label": "Hands-on project skills"},
+                {"icon": "💼", "label": "Job-ready portfolio"},
+                {"icon": "📜", "label": "Certifications & credentials"},
+                {"icon": "🚀", "label": "Speed — learn as fast as possible"},
+                {"icon": "🤝", "label": "Networking & community"}
+            ]
+        },
+        "q4": {
+            "question": "What is your current level?",
+            "subtitle": "This directly affects your recommendations",
+            "type": "level_cards",
+            "options": [
+                {"icon": "🌱", "label": "Complete Beginner", "description": "Just starting out, no prior experience"},
+                {"icon": "📖", "label": "Novice", "description": "Know the basics but need guidance"},
+                {"icon": "🔧", "label": "Intermediate", "description": "Can work independently on simple tasks"},
+                {"icon": "🚀", "label": "Advanced", "description": "Comfortable with complex problems"},
+                {"icon": "🏆", "label": "Expert", "description": "Could teach others and lead projects"}
+            ]
+        },
+        "q5": {
+            "question": "Rate yourself honestly on these dimensions",
+            "subtitle": "1 = barely know it, 10 = could teach it",
+            "type": "multi_slider_panel",
+            "dimensions": [
+                {"key": "theory", "label": "Theoretical Knowledge", "description": "Understanding of core concepts"},
+                {"key": "practical", "label": "Practical Application", "description": "Hands-on experience"},
+                {"key": "problem_solving", "label": "Problem Solving", "description": "Ability to tackle new challenges"},
+                {"key": "tools", "label": "Tools & Technology", "description": "Familiarity with industry tools"},
+                {"key": "communication", "label": "Domain Communication", "description": "Can explain concepts to others"}
+            ]
+        },
+        "q6": {
+            "question": "What have you already tried to learn this?",
+            "subtitle": "Prevents us from recommending what didn't work",
+            "type": "conditional_checklist",
+            "resources": ["YouTube tutorials", "Online courses", "Books", "Bootcamp", "Official docs", "Mentorship", "Personal projects", "Work experience", "College courses", "Starting fresh"],
+            "completionOptions": ["Just started, lost motivation quickly", "Got halfway through but stopped", "Finished but didn't retain much", "Completed and applied it"],
+            "stopReasons": ["Too boring", "Too hard", "Too slow", "Not practical enough", "Life got busy", "Couldn't find good resources", "Didn't know what to build"]
+        },
+        "q7": {
+            "question": "Tell me exactly where you're stuck",
+            "subtitle": "The more specific you are, the better your roadmap",
+            "type": "three_textarea_structured",
+            "placeholders": {"trying": "e.g., Learning a new skill for career growth", "notWorking": "e.g., Can't retain information or apply it", "alreadyTried": "e.g., Watched videos, read articles"},
+            "quickTags": ["Overwhelmed", "No direction", "Theory vs practice gap", "Time management", "Motivation"]
+        },
+        "q8": {
+            "question": "Which of these describe you?",
+            "subtitle": "Toggle all that apply — this shapes your learning plan",
+            "type": "binary_toggle_list",
+            "toggles": [
+                "I need deadlines or I don't finish",
+                "I learn better with a project to work toward",
+                "I give up when I can't find good resources",
+                "I've tried before and quit more than once",
+                "I prefer short bursts over long study sessions",
+                "I learn best by watching, not reading",
+                "I need someone to hold me accountable",
+                "I'd rather build something ugly that works than study theory",
+                "I lose focus easily without variety",
+                "I learn fastest when I can teach someone else"
+            ]
+        },
+        "q9": {
+            "question": "What's your end goal?",
+            "subtitle": "Your goal unlocks follow-up details",
+            "type": "card_plus_conditional_input",
+            "goals": [
+                {"icon": "💼", "label": "Get a new job", "followUp": {"type": "text", "placeholder": "Target role? e.g., Senior ML Engineer at FAANG"}},
+                {"icon": "📈", "label": "Get promoted", "followUp": {"type": "text", "placeholder": "What role are you aiming for?"}},
+                {"icon": "🔄", "label": "Switch careers", "followUp": {"type": "text", "placeholder": "What field are you switching to?"}},
+                {"icon": "🧠", "label": "Personal growth", "followUp": null},
+                {"icon": "🏗️", "label": "Build a project", "followUp": {"type": "textarea", "placeholder": "Describe your project idea..."}},
+                {"icon": "📜", "label": "Get certified", "followUp": {"type": "text", "placeholder": "Which certification?"}}
+            ]
+        },
+        "q10": {
+            "question": "How much time can you commit?",
+            "subtitle": "We'll calculate if it's enough for your goal",
+            "type": "smart_slider_with_calculator",
+            "hoursRange": [1, 40],
+            "deadlineOptions": ["1 week", "2 weeks", "1 month", "2 months", "3 months", "6 months", "1 year"],
+            "deadlineWeeksMap": {"1 week": 1, "2 weeks": 2, "1 month": 4, "2 months": 9, "3 months": 13, "6 months": 26, "1 year": 52}
+        }
+    }
+
+
+def generate_dynamic_questions(resume_data: dict) -> dict:
+    """Generate 10 personalized onboarding questions from resume data using Gemini.
+
+    Uses 10 high-signal question types designed to extract maximum useful data
+    in minimum time. Each type is chosen for its signal-to-effort ratio.
+    """
+    name = resume_data.get("name", "")
+    role = resume_data.get("role", "")
+    skills = resume_data.get("skills", [])
+    if isinstance(skills, list):
+        skills = ", ".join(skills)
+    experience = resume_data.get("experience", "")
+    education = resume_data.get("education", "")
+    projects = resume_data.get("projects", [])
+    if isinstance(projects, list):
+        projects = ", ".join(projects) if projects else "None listed"
+
+    prompt = f"""You are an expert learning coach and assessment designer.
+
+Here is a person's resume data:
+Name: {name}
+Role: {role}
+Skills: {skills}
+Experience: {experience}
+Education: {education}
+Projects: {projects}
+
+Based on EVERYTHING in their resume, generate 10 personalized onboarding questions.
+Every option, label, dimension, toggle, and placeholder MUST be tailored to their actual field.
+If they are in healthcare, ask about healthcare. If in tech, ask about tech. NEVER show irrelevant topics.
+
+QUESTION TYPE REFERENCE (use EXACTLY these types):
+- single_select_grid: ONE answer from many pills
+- multi_select_chips: multiple chips, toggle on/off
+- ranked_priority: drag/click to reorder by importance (extracts weighted priorities)
+- level_cards: 5-level spectrum cards
+- multi_slider_panel: N sliders on one card, 1-10 each (most data-dense)
+- conditional_checklist: checkboxes with follow-up that appears based on selection
+- three_textarea_structured: 3 labeled text boxes + quick-tag chips (highest signal)
+- binary_toggle_list: yes/no toggles (fast, high signal)
+- card_plus_conditional_input: pick a card, unlock a specific text field
+- smart_slider_with_calculator: slider(s) + live calculated feedback
+
+Return ONLY valid JSON (no markdown, no backticks):
+{{
+  "q1": {{
+    "question": "What do you want to master?",
+    "subtitle": "Pick the area you're focusing on right now",
+    "type": "single_select_grid",
+    "options": [{{"label": "string", "icon": "emoji"}}, ...] (10-16 options relevant to their field)
+  }},
+  "q2": {{
+    "question": "Which specific areas interest you?",
+    "subtitle": "Select all that apply (up to 4)",
+    "type": "multi_select_chips",
+    "subtopicMap": {{"q1_option_label": ["subtopic1", "subtopic2", ...], ...}} (subtopics for EVERY q1 option)
+  }},
+  "q3": {{
+    "question": "Rank what matters most to you right now",
+    "subtitle": "Drag or tap to reorder — #1 is top priority",
+    "type": "ranked_priority",
+    "items": [{{"icon": "emoji", "label": "string"}}, ...] (6 priorities relevant to their field/career stage)
+  }},
+  "q4": {{
+    "question": "What is your current level?",
+    "subtitle": "This directly affects your recommendations",
+    "type": "level_cards",
+    "options": [{{"icon": "emoji", "label": "string", "description": "string relevant to their field"}}, ...] (5 levels beginner to expert)
+  }},
+  "q5": {{
+    "question": "Rate yourself honestly on these dimensions",
+    "subtitle": "1 = barely know it, 10 = could teach it",
+    "type": "multi_slider_panel",
+    "dimensions": [{{"key": "snake_case_key", "label": "string", "description": "string"}}, ...] (5 dimensions tailored to their profession)
+  }},
+  "q6": {{
+    "question": "What have you already tried to learn this?",
+    "subtitle": "Prevents us from recommending what didn't work",
+    "type": "conditional_checklist",
+    "resources": ["resource1", "resource2", ...] (10 resources, mix of generic and field-specific),
+    "completionOptions": ["Just started, lost motivation quickly", "Got halfway through but stopped", "Finished but didn't retain much", "Completed and applied it"],
+    "stopReasons": ["Too boring", "Too hard", "Too slow", "Not practical enough", "Life got busy", "Couldn't find good resources", "Didn't know what to build"]
+  }},
+  "q7": {{
+    "question": "Tell me exactly where you're stuck",
+    "subtitle": "The more specific you are, the better your roadmap",
+    "type": "three_textarea_structured",
+    "placeholders": {{"trying": "example from their field", "notWorking": "example from their field", "alreadyTried": "example from their field"}},
+    "quickTags": ["tag1", "tag2", ...] (5-7 tags relevant to their specific struggles)
+  }},
+  "q8": {{
+    "question": "Which of these describe you?",
+    "subtitle": "Toggle all that apply — this shapes your learning plan",
+    "type": "binary_toggle_list",
+    "toggles": ["statement1", "statement2", ...] (10 behavioral statements relevant to learning in their field)
+  }},
+  "q9": {{
+    "question": "What's your end goal?",
+    "subtitle": "Your goal unlocks follow-up details",
+    "type": "card_plus_conditional_input",
+    "goals": [
+      {{"icon": "emoji", "label": "string", "followUp": {{"type": "text", "placeholder": "string"}} }},
+      {{"icon": "emoji", "label": "string", "followUp": null}},
+      ...
+    ] (6 goals relevant to their career, each with optional followUp)
+  }},
+  "q10": {{
+    "question": "How much time can you commit?",
+    "subtitle": "We'll calculate if it's enough for your goal",
+    "type": "smart_slider_with_calculator",
+    "hoursRange": [1, 40],
+    "deadlineOptions": ["1 week", "2 weeks", "1 month", "2 months", "3 months", "6 months", "1 year"],
+    "deadlineWeeksMap": {{"1 week": 1, "2 weeks": 2, "1 month": 4, "2 months": 9, "3 months": 13, "6 months": 26, "1 year": 52}}
+  }}
+}}
+
+CRITICAL RULES:
+- q1 options MUST reflect their actual field from the resume
+- q3 priorities MUST be relevant to their career stage and goals
+- q5 dimensions MUST make sense for their profession
+- q7 placeholders MUST use examples from their industry
+- q8 toggles MUST be behavioral statements relevant to learning in their domain
+- q9 goals MUST match realistic career outcomes for their background
+- Return ONLY JSON. No markdown, no backticks, no explanation."""
+
+    # Attempt up to 2 times (initial + 1 retry)
+    for attempt in range(2):
+        try:
+            text = _call_gemini(prompt)
+            cleaned = _clean_json_response(text)
+            questions = json.loads(cleaned)
+            # Basic validation: ensure we got q1 through q10
+            if all(f"q{i}" in questions for i in range(1, 11)):
+                return questions
+            print(f"Dynamic questions missing keys on attempt {attempt + 1}, retrying...")
+        except (json.JSONDecodeError, Exception) as e:
+            print(f"Dynamic questions parse error on attempt {attempt + 1}: {e}")
+
+    print("Dynamic questions generation failed, returning fallback set")
+    return _get_fallback_questions()
+
+
 def generate_questions(profile: dict) -> list:
     try:
         topic = profile.get("topic", "")
@@ -139,13 +406,12 @@ def diagnose_and_plan(profile: dict) -> dict:
         subtopics = profile.get("subtopics", [])
         current_level = profile.get("currentLevel", "beginner")
 
-        # Self assessment
+        # Priorities (ranked list)
+        priorities = profile.get("priorities", [])
+
+        # Self assessment (dynamic keys from Gemini)
         sa = profile.get("selfAssessment", {}) or {}
-        theory = sa.get("theory", 5)
-        practical = sa.get("practical", 5)
-        debugging = sa.get("debugging", 5)
-        docs = sa.get("docs", 5)
-        teaching = sa.get("teaching", 5)
+        sa_text = ", ".join([f"{k}: {v}/10" for k, v in sa.items()]) if sa else "Not provided"
 
         # Learning history
         lh = profile.get("learningHistory", {}) or {}
@@ -153,25 +419,28 @@ def diagnose_and_plan(profile: dict) -> dict:
         completion_level = lh.get("completionLevel", "")
         stop_reasons = lh.get("stopReasons", [])
 
-        # The wall
+        # The wall (highest signal — free text)
         tw = profile.get("theWall", {}) or {}
         trying = tw.get("trying", "")
         not_working = tw.get("notWorking", "")
         already_tried = tw.get("alreadyTried", "")
 
-        # Learning style
-        ls = profile.get("learningStyle", {}) or {}
-        primary_style = ls.get("primary", "")
-        environment = ls.get("environment", [])
-        study_time = ls.get("studyTime", "")
+        # Behavior flags (binary toggles)
+        behavior_flags = profile.get("behaviorFlags", [])
 
         # Goal
         goal = profile.get("goal", {}) or {}
         goal_type = goal.get("type", "")
-        deadline = goal.get("deadline", "")
-        hours_per_week = goal.get("hoursPerWeek", 10)
+        goal_detail = goal.get("detail", "")
 
-        # Context
+        # Time commitment
+        tc = profile.get("timeCommitment", {}) or {}
+        hours_per_week = tc.get("hoursPerWeek", goal.get("hoursPerWeek", 10))
+        deadline = tc.get("deadline", goal.get("deadline", ""))
+
+        # Legacy fields (backward compat)
+        ls = profile.get("learningStyle", {}) or {}
+        primary_style = ls.get("primary", "")
         ctx = profile.get("context", {}) or {}
         professional_background = ctx.get("professionalBackground", "")
         industry = ctx.get("industry", "")
@@ -185,12 +454,14 @@ Role: {role}
 Skills: {', '.join(skills) if skills else 'Not specified'}
 Topic: {topic}
 Subtopics: {', '.join(subtopics) if subtopics else 'Not specified'}
+Priorities (ranked): {', '.join(priorities) if priorities else 'Not specified'}
 Current Level: {current_level}
-Self Assessment: Theory {theory}/10, Practical {practical}/10, Debugging {debugging}/10, Docs {docs}/10, Teaching {teaching}/10
+Self Assessment: {sa_text}
 Learning History: Tried {', '.join(tried_resources) if tried_resources else 'nothing yet'}, got to {completion_level or 'N/A'}, stopped because {', '.join(stop_reasons) if stop_reasons else 'N/A'}
-The Wall: Trying to {trying or 'N/A'}, not working because {not_working or 'N/A'}, already tried {already_tried or 'N/A'}
-Learning Style: {primary_style or 'Not specified'}, prefers {', '.join(environment) if environment else 'Not specified'}, studies at {study_time or 'Not specified'}
-Goal: {goal_type or 'Not specified'} by {deadline or 'No deadline'}, {hours_per_week} hrs/week
+The Wall (their own words): Trying to {trying or 'N/A'}, not working because {not_working or 'N/A'}, already tried {already_tried or 'N/A'}
+Behavior Flags: {', '.join(behavior_flags) if behavior_flags else 'None selected'}
+Goal: {goal_type or 'Not specified'}{f' — {goal_detail}' if goal_detail else ''} by {deadline or 'No deadline'}, {hours_per_week} hrs/week
+Learning Style: {primary_style or 'Not specified'}
 Background: {professional_background or 'Not specified'} in {industry or 'Not specified'}
 Additional: {additional_context or 'None'}
 

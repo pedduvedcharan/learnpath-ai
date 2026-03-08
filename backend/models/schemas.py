@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 
 class UserProfile(BaseModel):
@@ -12,60 +12,27 @@ class UserProfile(BaseModel):
     projects: List[str]
 
 
-class SelfAssessment(BaseModel):
-    theory: int
-    practical: int
-    debugging: int
-    docs: int
-    teaching: int
-
-
-class LearningHistory(BaseModel):
-    triedResources: List[str] = []
-    completionLevel: str = ""
-    stopReasons: List[str] = []
-
-
-class TheWall(BaseModel):
-    trying: str = ""
-    notWorking: str = ""
-    alreadyTried: str = ""
-    quickTags: List[str] = []
-
-
-class LearningStyleData(BaseModel):
-    primary: str
-    environment: List[str] = []
-    studyTime: str = ""
-
-
-class GoalData(BaseModel):
-    type: str
-    deadline: str = ""
-    hoursPerWeek: int = 10
-    totalHours: int = 0
-    targetRole: str = ""
-    projectDescription: str = ""
-
-
-class ContextData(BaseModel):
-    professionalBackground: str = ""
-    industry: str = ""
-    preferredLanguage: str = "English"
-    additionalContext: str = ""
-
-
 class LearningProfile(BaseModel):
+    """Flexible learning profile that accepts any data from dynamic questions.
+    The question types vary based on what Gemini generates, so we accept
+    arbitrary nested data rather than rigid typed sub-models."""
     user_id: str
-    topic: str
-    subtopics: List[str] = []
-    currentLevel: str
-    selfAssessment: Optional[SelfAssessment] = None
-    learningHistory: Optional[LearningHistory] = None
-    theWall: Optional[TheWall] = None
-    learningStyle: Optional[LearningStyleData] = None
-    goal: Optional[GoalData] = None
-    context: Optional[ContextData] = None
+    topic: Optional[str] = ""
+    subtopics: Optional[List[str]] = []
+    priorities: Optional[List[str]] = []
+    currentLevel: Optional[str] = ""
+    selfAssessment: Optional[Dict[str, Any]] = {}
+    learningHistory: Optional[Dict[str, Any]] = {}
+    theWall: Optional[Dict[str, Any]] = {}
+    behaviorFlags: Optional[List[str]] = []
+    goal: Optional[Dict[str, Any]] = {}
+    timeCommitment: Optional[Dict[str, Any]] = {}
+    # Legacy fields for backward compatibility
+    learningStyle: Optional[Dict[str, Any]] = None
+    context: Optional[Dict[str, Any]] = None
+
+    class Config:
+        extra = "allow"
 
 
 class ChatMessage(BaseModel):
