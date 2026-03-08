@@ -18,24 +18,28 @@ async def generate(request: GenerateWithProfileRequest):
     try:
         profile = request.profile or {}
 
-        # Try to get from DB if user_id provided and no profile sent
-        if request.user_id and not profile:
+        # Load everything from MongoDB using user_id
+        if request.user_id:
             try:
                 user = db_service.get_user(request.user_id)
+                if user:
+                    # Merge resume data into profile
+                    for key in ["name", "role", "skills", "experience", "education", "need_type", "need_note"]:
+                        if user.get(key):
+                            profile[key] = user[key]
+
+                # Load learning profile (deep questions answers)
                 db_profile = db_service.get_learning_profile(request.user_id)
                 if db_profile:
-                    profile = db_profile
-                if user:
-                    profile["name"] = user.get("name", "")
-                    profile["role"] = user.get("role", "")
-                    profile["skills"] = user.get("skills", [])
-                    profile["experience"] = user.get("experience", "")
-                    profile["education"] = user.get("education", "")
+                    # Merge learning profile into profile (topic, subtopics, level, etc.)
+                    for key, val in db_profile.items():
+                        if key not in ("_id", "user_id", "created_at") and val:
+                            profile[key] = val
             except Exception as db_err:
-                print(f"DB read failed, using provided profile: {db_err}")
+                print(f"DB read failed: {db_err}")
 
         if not profile.get("topic"):
-            raise HTTPException(status_code=400, detail="No profile data available. Please provide profile or valid user_id.")
+            raise HTTPException(status_code=400, detail="No profile data available. Please complete the questions first.")
 
         # Generate diagnosis and learning plan
         diagnosis = gemini_service.diagnose_and_plan(profile)

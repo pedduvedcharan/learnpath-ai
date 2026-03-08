@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const steps = ['Profile', 'Resume', 'Questions', 'Goal']
 
@@ -13,7 +15,6 @@ const processingTexts = [
   'Understanding your background...',
   'Building your profile...',
 ]
-
 
 function ProgressBar({ currentStep }) {
   return (
@@ -65,9 +66,11 @@ function ProgressBar({ currentStep }) {
 
 export default function ResumeUpload() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [status, setStatus] = useState('idle') // idle | processing | done
   const [processingIndex, setProcessingIndex] = useState(0)
   const [resumeData, setResumeData] = useState(null)
+  const [userId, setUserId] = useState(searchParams.get('uid') || '')
 
   // Cycle processing texts
   useEffect(() => {
@@ -83,19 +86,11 @@ export default function ResumeUpload() {
       setStatus('processing')
       setProcessingIndex(0)
 
-      // Clear ALL old data before new extraction
-      localStorage.removeItem('resumeData')
-      localStorage.removeItem('user_id')
-      localStorage.removeItem('userDetails')
-      localStorage.removeItem('learningProfile')
-      localStorage.removeItem('needType')
-
       try {
         const formData = new FormData()
         formData.append('file', file)
 
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-        const response = await axios.post(`${apiUrl}/api/extract-resume`, formData, {
+        const response = await axios.post(`${API_BASE}/api/extract-resume`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
           timeout: 60000,
         })
@@ -103,9 +98,8 @@ export default function ResumeUpload() {
         const result = response.data
         const extracted = result.data || result
         setResumeData(extracted)
-        localStorage.setItem('resumeData', JSON.stringify(extracted))
         if (result.user_id) {
-          localStorage.setItem('user_id', result.user_id)
+          setUserId(result.user_id)
         }
         setStatus('done')
         toast.success('Resume extracted successfully!')
@@ -137,7 +131,7 @@ export default function ResumeUpload() {
   })
 
   const handleContinue = () => {
-    navigate('/questions')
+    navigate(`/questions?uid=${userId}`)
   }
 
   return (
@@ -181,9 +175,7 @@ export default function ResumeUpload() {
 
           {status === 'processing' && (
             <div className="w-full max-w-xl mx-auto py-20 rounded-2xl border-2 border-slate-700 bg-slate-900/30 flex flex-col items-center gap-6">
-              {/* Spinning ring */}
               <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-              {/* Cycling text */}
               <AnimatePresence mode="wait">
                 <motion.p
                   key={processingIndex}
@@ -224,7 +216,6 @@ export default function ResumeUpload() {
                 <h3 className="text-xl font-bold text-white mb-1">{resumeData.name}</h3>
                 <p className="text-slate-400 mb-4">{resumeData.role}</p>
 
-                {/* Skills */}
                 <div className="mb-4">
                   <p className="text-sm text-slate-500 mb-2">Skills</p>
                   <div className="flex flex-wrap gap-2">
@@ -239,7 +230,6 @@ export default function ResumeUpload() {
                   </div>
                 </div>
 
-                {/* Experience */}
                 {resumeData.experience && (
                   <div className="mb-4">
                     <p className="text-sm text-slate-500 mb-1">Experience</p>
@@ -247,7 +237,6 @@ export default function ResumeUpload() {
                   </div>
                 )}
 
-                {/* Education */}
                 {resumeData.education && (
                   <div className="mb-4">
                     <p className="text-sm text-slate-500 mb-1">Education</p>
@@ -255,7 +244,6 @@ export default function ResumeUpload() {
                   </div>
                 )}
 
-                {/* Certifications */}
                 {resumeData.certifications?.length > 0 && (
                   <div className="mb-4">
                     <p className="text-sm text-slate-500 mb-1">Certifications</p>
@@ -263,7 +251,6 @@ export default function ResumeUpload() {
                   </div>
                 )}
 
-                {/* Projects */}
                 {resumeData.projects?.length > 0 && (
                   <div>
                     <p className="text-sm text-slate-500 mb-1">Projects</p>
@@ -275,10 +262,10 @@ export default function ResumeUpload() {
               {/* Action buttons */}
               <div className="flex justify-center gap-4">
                 <button
-                  onClick={() => navigate('/details')}
+                  onClick={() => setStatus('idle')}
                   className="px-6 py-3 rounded-xl border border-slate-600 text-slate-300 font-medium hover:bg-slate-800 transition-all cursor-pointer"
                 >
-                  &#9999;&#65039; Edit
+                  &#9999;&#65039; Re-upload
                 </button>
                 <button
                   onClick={handleContinue}

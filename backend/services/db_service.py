@@ -43,6 +43,10 @@ def get_user(user_id: str) -> dict:
     return user
 
 
+def update_user(user_id: str, update_data: dict):
+    get_db()["users"].update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
+
+
 def save_learning_profile(profile_data: dict) -> str:
     doc = {**profile_data, "created_at": datetime.utcnow()}
     db = get_db()

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import DiagnosisCard from '../components/DiagnosisCard'
@@ -282,28 +283,15 @@ export default function Analysis() {
   const [visibleSections, setVisibleSections] = useState(0)
   const [chatOpen, setChatOpen] = useState(false)
   const resourcesRef = useRef(null)
+  const [searchParams] = useSearchParams()
+  const userId = searchParams.get('uid') || ''
 
-  const userId = typeof window !== 'undefined' ? localStorage.getItem('user_id') : null
-
-  // Fetch data on mount
+  // Fetch data on mount — everything comes from MongoDB via user_id
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Build full profile from localStorage (resume + deep questions + need type)
-        const resumeData = JSON.parse(localStorage.getItem('resumeData') || '{}')
-        const learningProfile = JSON.parse(localStorage.getItem('learningProfile') || '{}')
-        const needType = JSON.parse(localStorage.getItem('needType') || '{}')
-
-        const profile = {
-          ...resumeData,
-          ...learningProfile,
-          needType: needType.type || '',
-          needNote: needType.note || '',
-        }
-
         const response = await axios.post(`${API_BASE}/api/generate`, {
           user_id: userId,
-          profile,
         })
 
         const result = response.data
@@ -323,7 +311,12 @@ export default function Analysis() {
       }
     }
 
-    fetchData()
+    if (userId) {
+      fetchData()
+    } else {
+      setData(mockResults)
+      setTimeout(() => setLoading(false), 1000)
+    }
   }, [userId])
 
   // Stagger section reveals after loading completes

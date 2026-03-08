@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import axios from 'axios'
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const steps = ['Profile', 'Resume', 'Questions', 'Goal']
 
@@ -104,13 +107,25 @@ const cardVariant = {
 
 export default function WhatDoYouNeed() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const userId = searchParams.get('uid') || ''
   const [selected, setSelected] = useState('')
   const [note, setNote] = useState('')
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selected) return
-    localStorage.setItem('needType', JSON.stringify({ type: selected, note }))
-    navigate('/analysis')
+    if (userId) {
+      try {
+        await axios.post(`${API_BASE}/api/save-need`, {
+          user_id: userId,
+          need_type: selected,
+          note,
+        })
+      } catch (err) {
+        console.error('Failed to save need:', err.message)
+      }
+    }
+    navigate(`/analysis?uid=${userId}`)
   }
 
   return (

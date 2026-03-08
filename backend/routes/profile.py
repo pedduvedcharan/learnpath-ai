@@ -1,4 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from pydantic import BaseModel
+from typing import Optional
 from models.schemas import LearningProfile
 from services import gemini_service, db_service
 import PyPDF2
@@ -10,7 +12,6 @@ router = APIRouter(prefix="/api")
 @router.post("/extract-resume")
 async def extract_resume(file: UploadFile = File(...)):
     try:
-        # Read PDF content
         contents = await file.read()
         pdf_reader = PyPDF2.PdfReader(io.BytesIO(contents))
 
@@ -24,12 +25,8 @@ async def extract_resume(file: UploadFile = File(...)):
         # Extract structured data using Gemini
         extracted = gemini_service.extract_resume(pdf_text)
 
-        # Try to save user to database, but don't fail if DB is down
-        user_id = None
-        try:
-            user_id = db_service.save_user(extracted)
-        except Exception as db_err:
-            print(f"Warning: Could not save to DB: {db_err}")
+        # Save to MongoDB
+        user_id = db_service.save_user(extracted)
 
         return {
             "success": True,
@@ -42,14 +39,15 @@ async def extract_resume(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/generate-questions")
-async def generate_questions(profile: dict):
+@router.get("/user/{user_id}")
+async def get_user(user_id: str):
     try:
-        questions = gemini_service.generate_questions(profile)
-        return {
-            "success": True,
-            "questions": questions
-        }
+        user = db_service.get_user(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return {"success": True, "data": user}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -63,5 +61,34 @@ async def save_profile(profile: LearningProfile):
             "success": True,
             "profile_id": profile_id
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/profile/{user_id}")
+async def get_profile(user_id: str):
+    try:
+        profile = db_service.get_learning_profile(user_id)
+        if not profile:
+            return {"success": True, "data": None}
+        return {"success": True, "data": profile}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class SaveNeedRequest(BaseModel):
+    user_id: str
+    need_type: str
+    note: Optional[str] = ""
+
+
+@router.post("/save-need")
+async def save_need(request: SaveNeedRequest):
+    try:
+        db_service.update_user(request.user_id, {
+            "need_type": request.need_type,
+            "need_note": request.note
+        })
+        return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

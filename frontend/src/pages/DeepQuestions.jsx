@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import axios from 'axios'
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 /* ─── topic → subtopic map ─── */
 const SUBTOPIC_MAP = {
@@ -138,6 +141,8 @@ function sliderGradient(val) {
 /* ─── Component ─── */
 export default function DeepQuestions() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const userId = searchParams.get('uid') || ''
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [direction, setDirection] = useState(1)
   const [customTopic, setCustomTopic] = useState('')
@@ -155,38 +160,42 @@ export default function DeepQuestions() {
 
   const [resumeData, setResumeData] = useState(null)
 
-  /* restore from localStorage */
+  /* Load resume data from MongoDB */
   useEffect(() => {
-    const saved = localStorage.getItem('learningProfile')
-    if (saved) {
+    if (!userId) return
+    const fetchUser = async () => {
       try {
-        const parsed = JSON.parse(saved)
-        setLearningProfile((prev) => ({ ...prev, ...parsed }))
-      } catch { /* ignore */ }
+        const res = await axios.get(`${API_BASE}/api/user/${userId}`)
+        const user = res.data.data
+        if (user) {
+          setResumeData(user)
+          // Pre-fill context from resume
+          setLearningProfile((prev) => ({
+            ...prev,
+            context: {
+              ...prev.context,
+              professionalBackground: prev.context.professionalBackground || user.role || '',
+              additionalContext: prev.context.additionalContext || `Skills: ${(user.skills || []).join(', ')}. Experience: ${user.experience || ''}. Education: ${user.education || ''}.`,
+            },
+          }))
+        }
+      } catch (err) {
+        console.error('Failed to load user:', err.message)
+      }
     }
-    // Load resume data and pre-fill context
-    const resume = localStorage.getItem('resumeData')
-    if (resume) {
-      try {
-        const parsed = JSON.parse(resume)
-        setResumeData(parsed)
-        // Pre-fill context from resume if not already set
-        setLearningProfile((prev) => ({
-          ...prev,
-          context: {
-            ...prev.context,
-            professionalBackground: prev.context.professionalBackground || parsed.role || '',
-            additionalContext: prev.context.additionalContext || `Skills: ${(parsed.skills || []).join(', ')}. Experience: ${parsed.experience || ''}. Education: ${parsed.education || ''}.`,
-          },
-        }))
-      } catch { /* ignore */ }
-    }
-  }, [])
+    fetchUser()
 
-  /* save on every change */
-  useEffect(() => {
-    localStorage.setItem('learningProfile', JSON.stringify(learningProfile))
-  }, [learningProfile])
+    // Also load saved learning profile from MongoDB
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/api/profile/${userId}`)
+        if (res.data.data) {
+          setLearningProfile((prev) => ({ ...prev, ...res.data.data }))
+        }
+      } catch { /* no saved profile yet */ }
+    }
+    fetchProfile()
+  }, [userId])
 
   const updateProfile = useCallback((path, value) => {
     setLearningProfile((prev) => {
@@ -944,9 +953,18 @@ export default function DeepQuestions() {
                 Edit Answers
               </button>
               <button
-                onClick={() => {
-                  localStorage.setItem('learningProfile', JSON.stringify(learningProfile))
-                  navigate('/need')
+                onClick={async () => {
+                  if (userId) {
+                    try {
+                      await axios.post(`${API_BASE}/api/save-profile`, {
+                        user_id: userId,
+                        ...learningProfile,
+                      })
+                    } catch (err) {
+                      console.error('Failed to save profile:', err.message)
+                    }
+                  }
+                  navigate(`/need?uid=${userId}`)
                 }}
                 className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-white font-semibold text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.02] hover:shadow-cyan-500/40 active:scale-[0.98] transition-all cursor-pointer"
               >
