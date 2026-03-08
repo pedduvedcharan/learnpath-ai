@@ -6,29 +6,38 @@ from datetime import datetime
 
 load_dotenv()
 
-client = MongoClient(os.getenv("MONGODB_URI"))
-db = client["learnpath_ai"]
+MONGODB_URI = os.getenv("MONGODB_URI")
 
-users = db["users"]
-learning_profiles = db["learning_profiles"]
-sessions = db["sessions"]
-chat_history = db["chat_history"]
+_client = None
+_db = None
+_indexes_created = False
 
-# Create indexes
-users.create_index("user_id")
-learning_profiles.create_index("user_id")
-sessions.create_index("user_id")
-chat_history.create_index("user_id")
+
+def get_db():
+    global _client, _db, _indexes_created
+    if _db is None:
+        _client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+        _db = _client["learnpath_ai"]
+    if not _indexes_created:
+        try:
+            _db["users"].create_index("user_id")
+            _db["learning_profiles"].create_index("user_id")
+            _db["sessions"].create_index("user_id")
+            _db["chat_history"].create_index("user_id")
+            _indexes_created = True
+        except Exception as e:
+            print(f"Warning: Could not create indexes: {e}")
+    return _db
 
 
 def save_user(user_data: dict) -> str:
     user_data["created_at"] = datetime.utcnow()
-    result = users.insert_one(user_data)
+    result = get_db()["users"].insert_one(user_data)
     return str(result.inserted_id)
 
 
 def get_user(user_id: str) -> dict:
-    user = users.find_one({"_id": ObjectId(user_id)})
+    user = get_db()["users"].find_one({"_id": ObjectId(user_id)})
     if user:
         user["_id"] = str(user["_id"])
     return user
@@ -36,17 +45,17 @@ def get_user(user_id: str) -> dict:
 
 def save_learning_profile(profile_data: dict) -> str:
     profile_data["created_at"] = datetime.utcnow()
-    # Update if exists, insert if not
-    existing = learning_profiles.find_one({"user_id": profile_data["user_id"]})
+    db = get_db()
+    existing = db["learning_profiles"].find_one({"user_id": profile_data["user_id"]})
     if existing:
-        learning_profiles.update_one({"user_id": profile_data["user_id"]}, {"$set": profile_data})
+        db["learning_profiles"].update_one({"user_id": profile_data["user_id"]}, {"$set": profile_data})
         return str(existing["_id"])
-    result = learning_profiles.insert_one(profile_data)
+    result = db["learning_profiles"].insert_one(profile_data)
     return str(result.inserted_id)
 
 
 def get_learning_profile(user_id: str) -> dict:
-    profile = learning_profiles.find_one({"user_id": user_id})
+    profile = get_db()["learning_profiles"].find_one({"user_id": user_id})
     if profile:
         profile["_id"] = str(profile["_id"])
     return profile
@@ -54,30 +63,30 @@ def get_learning_profile(user_id: str) -> dict:
 
 def save_session(session_data: dict) -> str:
     session_data["created_at"] = datetime.utcnow()
-    result = sessions.insert_one(session_data)
+    result = get_db()["sessions"].insert_one(session_data)
     return str(result.inserted_id)
 
 
 def get_sessions(user_id: str) -> list:
-    results = list(sessions.find({"user_id": user_id}).sort("created_at", -1))
+    results = list(get_db()["sessions"].find({"user_id": user_id}).sort("created_at", -1))
     for r in results:
         r["_id"] = str(r["_id"])
     return results
 
 
 def get_latest_session(user_id: str) -> dict:
-    session = sessions.find_one({"user_id": user_id}, sort=[("created_at", -1)])
+    session = get_db()["sessions"].find_one({"user_id": user_id}, sort=[("created_at", -1)])
     if session:
         session["_id"] = str(session["_id"])
     return session
 
 
 def update_session(session_id: str, update_data: dict):
-    sessions.update_one({"_id": ObjectId(session_id)}, {"$set": update_data})
+    get_db()["sessions"].update_one({"_id": ObjectId(session_id)}, {"$set": update_data})
 
 
 def save_chat_message(user_id: str, role: str, text: str):
-    chat_history.update_one(
+    get_db()["chat_history"].update_one(
         {"user_id": user_id},
         {"$push": {"messages": {"role": role, "text": text, "timestamp": datetime.utcnow()}}},
         upsert=True
@@ -85,7 +94,7 @@ def save_chat_message(user_id: str, role: str, text: str):
 
 
 def get_chat_history(user_id: str) -> list:
-    doc = chat_history.find_one({"user_id": user_id})
+    doc = get_db()["chat_history"].find_one({"user_id": user_id})
     if doc and "messages" in doc:
         return doc["messages"]
     return []
