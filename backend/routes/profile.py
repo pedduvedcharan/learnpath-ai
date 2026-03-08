@@ -22,8 +22,14 @@ async def extract_resume(file: UploadFile = File(...)):
         if not pdf_text.strip():
             raise HTTPException(status_code=400, detail="Could not extract text from PDF")
 
+        # Log what PyPDF2 actually extracted so we can debug
+        print(f"=== PDF TEXT START ===")
+        print(pdf_text[:2000])
+        print(f"=== PDF TEXT END (total {len(pdf_text)} chars) ===")
+
         # Extract structured data using Gemini
         extracted = gemini_service.extract_resume(pdf_text)
+        print(f"=== GEMINI EXTRACTED: {extracted} ===")
 
         # Save to MongoDB
         user_id = db_service.save_user(extracted)
