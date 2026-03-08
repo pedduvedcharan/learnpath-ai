@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pymongo[srv]
+python-dotenv
+google-generativeai
+youtube-transcript-api
+google-api-python-client
+elevenlabs
+pydantic
+python-multipart
+PyPDF2
