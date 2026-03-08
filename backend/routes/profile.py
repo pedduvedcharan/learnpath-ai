@@ -24,8 +24,12 @@ async def extract_resume(file: UploadFile = File(...)):
         # Extract structured data using Gemini
         extracted = gemini_service.extract_resume(pdf_text)
 
-        # Save user to database
-        user_id = db_service.save_user(extracted)
+        # Try to save user to database, but don't fail if DB is down
+        user_id = None
+        try:
+            user_id = db_service.save_user(extracted)
+        except Exception as db_err:
+            print(f"Warning: Could not save to DB: {db_err}")
 
         return {
             "success": True,

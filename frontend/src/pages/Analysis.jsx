@@ -289,15 +289,36 @@ export default function Analysis() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Build full profile from localStorage (resume + deep questions + need type)
+        const resumeData = JSON.parse(localStorage.getItem('resumeData') || '{}')
+        const learningProfile = JSON.parse(localStorage.getItem('learningProfile') || '{}')
+        const needType = JSON.parse(localStorage.getItem('needType') || '{}')
+
+        const profile = {
+          ...resumeData,
+          ...learningProfile,
+          needType: needType.type || '',
+          needNote: needType.note || '',
+        }
+
         const response = await axios.post(`${API_BASE}/api/generate`, {
           user_id: userId,
+          profile,
         })
-        setData(response.data)
-      } catch {
-        // Fallback to mock
+
+        const result = response.data
+        const diagnosis = result.diagnosis || {}
+        setData({
+          ...diagnosis,
+          resources: result.resources || diagnosis.resources || [],
+          youtube_results: result.youtube_results || [],
+          audio_url: result.audio_url || null,
+          session_id: result.session_id,
+        })
+      } catch (err) {
+        console.error('Generate API failed:', err)
         setData(mockResults)
       } finally {
-        // Small delay for dramatic effect
         setTimeout(() => setLoading(false), 2000)
       }
     }

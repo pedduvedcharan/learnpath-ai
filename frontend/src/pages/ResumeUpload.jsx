@@ -102,9 +102,13 @@ export default function ResumeUpload() {
           timeout: 30000,
         })
 
-        const data = response.data
-        setResumeData(data)
-        localStorage.setItem('resumeData', JSON.stringify(data))
+        const result = response.data
+        const extracted = result.data || result
+        setResumeData(extracted)
+        localStorage.setItem('resumeData', JSON.stringify(extracted))
+        if (result.user_id) {
+          localStorage.setItem('user_id', result.user_id)
+        }
         setStatus('done')
       } catch (err) {
         console.warn('API call failed, using mock data:', err.message)

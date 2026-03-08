@@ -5,6 +5,8 @@ import Navbar from './components/Navbar'
 import Welcome from './pages/Welcome'
 import Details from './pages/Details'
 import ResumeUpload from './pages/ResumeUpload'
+import DeepQuestions from './pages/DeepQuestions'
+import WhatDoYouNeed from './pages/WhatDoYouNeed'
 import AnalysisPage from './pages/Analysis'
 
 const pageTransition = {
@@ -24,35 +26,6 @@ function AnimatedPage({ children }) {
     >
       {children}
     </motion.div>
-  )
-}
-
-// Placeholder pages for routes not yet built
-function DeepQuestions() {
-  return (
-    <AnimatedPage>
-      <div className="min-h-screen flex items-center justify-center">
-        <h1 className="font-heading text-4xl text-white">Deep Questions — Coming Soon</h1>
-      </div>
-    </AnimatedPage>
-  )
-}
-
-function WhatDoYouNeed() {
-  return (
-    <AnimatedPage>
-      <div className="min-h-screen flex items-center justify-center">
-        <h1 className="font-heading text-4xl text-white">What Do You Need — Coming Soon</h1>
-      </div>
-    </AnimatedPage>
-  )
-}
-
-function Analysis() {
-  return (
-    <AnimatedPage>
-      <AnalysisPage />
-    </AnimatedPage>
   )
 }
 
@@ -101,15 +74,27 @@ export default function App() {
           />
           <Route
             path="/questions"
-            element={<DeepQuestions />}
+            element={
+              <AnimatedPage>
+                <DeepQuestions />
+              </AnimatedPage>
+            }
           />
           <Route
             path="/need"
-            element={<WhatDoYouNeed />}
+            element={
+              <AnimatedPage>
+                <WhatDoYouNeed />
+              </AnimatedPage>
+            }
           />
           <Route
             path="/analysis"
-            element={<Analysis />}
+            element={
+              <AnimatedPage>
+                <AnalysisPage />
+              </AnimatedPage>
+            }
           />
         </Routes>
       </AnimatePresence>
