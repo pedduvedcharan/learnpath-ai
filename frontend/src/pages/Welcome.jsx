@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
@@ -32,6 +33,15 @@ const features = [
 
 export default function Welcome() {
   const navigate = useNavigate()
+
+  // Clear ALL session data when user starts fresh from Welcome page
+  useEffect(() => {
+    localStorage.removeItem('resumeData')
+    localStorage.removeItem('user_id')
+    localStorage.removeItem('userDetails')
+    localStorage.removeItem('learningProfile')
+    localStorage.removeItem('needType')
+  }, [])
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">

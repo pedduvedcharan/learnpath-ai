@@ -83,6 +83,13 @@ export default function ResumeUpload() {
       setStatus('processing')
       setProcessingIndex(0)
 
+      // Clear ALL old data before new extraction
+      localStorage.removeItem('resumeData')
+      localStorage.removeItem('user_id')
+      localStorage.removeItem('userDetails')
+      localStorage.removeItem('learningProfile')
+      localStorage.removeItem('needType')
+
       try {
         const formData = new FormData()
         formData.append('file', file)

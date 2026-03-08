@@ -40,19 +40,31 @@ def _clean_json_response(text: str) -> str:
 
 def extract_resume(pdf_text: str) -> dict:
     try:
-        prompt = f"""Extract the following information from this resume text and return ONLY valid JSON with these keys:
-- name (string)
-- role (string - current or most recent job title)
-- skills (array of strings)
-- experience (string - summary of work experience)
-- education (string - highest education)
-- certifications (array of strings)
-- projects (array of strings - project names/descriptions)
+        prompt = f"""You are a precise resume parser. Extract ONLY what is explicitly written in the resume text below. Do NOT invent, guess, or hallucinate any information.
+
+Rules:
+- "role": Use their PRIMARY professional identity or degree field (e.g. "Business Analytics & AI Student"), NOT a part-time/campus job
+- "skills": Extract ONLY technical and professional skills explicitly listed. Split compound skills into individual items. Keep only unique skills.
+- "experience": Summarize ALL work experience mentioned, with job titles and durations
+- "education": Full degree name, university, and expected graduation if mentioned
+- "certifications": Only if explicitly listed. Return empty array [] if none found.
+- "projects": Only project names/descriptions explicitly mentioned. Return empty array [] if none found.
+
+Return ONLY valid JSON with these exact keys:
+{{
+  "name": "Full Name",
+  "role": "Primary professional identity",
+  "skills": ["skill1", "skill2"],
+  "experience": "Summary of all work experience",
+  "education": "Degree, University, Graduation year",
+  "certifications": [],
+  "projects": []
+}}
 
 Resume text:
 {pdf_text}
 
-Return ONLY valid JSON, no markdown, no backticks, no explanation."""
+Return ONLY the JSON object. No markdown, no backticks, no explanation."""
 
         text = _call_gemini(prompt)
         cleaned = _clean_json_response(text)
