@@ -43,9 +43,9 @@ def extract_resume(pdf_text: str) -> dict:
         prompt = f"""You are a precise resume parser. Extract ONLY what is explicitly written in the resume text below. Do NOT invent, guess, or hallucinate any information.
 
 Rules:
-- "role": Use their PRIMARY professional identity or degree field (e.g. "Business Analytics & AI Student"), NOT a part-time/campus job
-- "skills": Extract ONLY technical and professional skills explicitly listed. Split compound skills into individual items. Keep only unique skills.
-- "experience": Summarize ALL work experience mentioned, with job titles and durations
+- "role": Use their PRIMARY professional identity based on their degree or main career field, NOT a part-time/campus job
+- "skills": Extract ONLY hard/technical skills (programming languages, tools, frameworks, technologies, platforms, methodologies). IGNORE soft skills like "communication", "teamwork", "leadership", "dependable", "punctual", "organized", "detail-oriented", "time management", "customer service", "self-motivated", "responsible", "reliable", etc. If the resume only has soft skills, return an empty array.
+- "experience": Summarize ALL work experience mentioned, including job titles, companies, and durations
 - "education": Full degree name, university, and expected graduation if mentioned
 - "certifications": Only if explicitly listed. Return empty array [] if none found.
 - "projects": Only project names/descriptions explicitly mentioned. Return empty array [] if none found.
@@ -53,8 +53,8 @@ Rules:
 Return ONLY valid JSON with these exact keys:
 {{
   "name": "Full Name",
-  "role": "Primary professional identity",
-  "skills": ["skill1", "skill2"],
+  "role": "Primary professional identity based on degree/career",
+  "skills": ["only_technical_skills"],
   "experience": "Summary of all work experience",
   "education": "Degree, University, Graduation year",
   "certifications": [],
