@@ -1,3 +1,4 @@
+import time
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -38,6 +39,9 @@ async def generate(request: GenerateWithProfileRequest):
 
         # Generate diagnosis and learning plan
         diagnosis = gemini_service.diagnose_and_plan(profile)
+
+        # Brief pause to avoid Gemini rate limits on free tier
+        time.sleep(3)
 
         # Search for curated resources
         resources = gemini_service.search_resources(

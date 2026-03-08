@@ -38,14 +38,15 @@ def search_videos(query: str, max_results: int = 3) -> list:
 
 def get_transcript_timestamp(video_id: str, topic: str) -> int:
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)
-        transcript_text = " ".join([f"[{int(entry['start'])}s] {entry['text']}" for entry in transcript[:200]])
+        ytt_api = YouTubeTranscriptApi()
+        transcript = ytt_api.fetch(video_id)
+        transcript_text = " ".join([f"[{int(entry.start)}s] {entry.text}" for entry in transcript.snippets[:200]])
 
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(
+        from services.gemini_service import _call_gemini
+        response_text = _call_gemini(
             f"Given this video transcript with timestamps, find the exact second where the content about '{topic}' starts. Return ONLY the number of seconds as an integer, nothing else.\n\nTranscript:\n{transcript_text}"
         )
-        seconds = int(response.text.strip())
+        seconds = int(response_text.strip())
         return seconds
     except Exception as e:
         print(f"Transcript timestamp error: {e}")

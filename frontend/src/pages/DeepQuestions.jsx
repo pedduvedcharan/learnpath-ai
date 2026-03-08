@@ -153,6 +153,8 @@ export default function DeepQuestions() {
     context: { professionalBackground: '', industry: '', preferredLanguage: 'English', additionalContext: '' },
   })
 
+  const [resumeData, setResumeData] = useState(null)
+
   /* restore from localStorage */
   useEffect(() => {
     const saved = localStorage.getItem('learningProfile')
@@ -160,6 +162,23 @@ export default function DeepQuestions() {
       try {
         const parsed = JSON.parse(saved)
         setLearningProfile((prev) => ({ ...prev, ...parsed }))
+      } catch { /* ignore */ }
+    }
+    // Load resume data and pre-fill context
+    const resume = localStorage.getItem('resumeData')
+    if (resume) {
+      try {
+        const parsed = JSON.parse(resume)
+        setResumeData(parsed)
+        // Pre-fill context from resume if not already set
+        setLearningProfile((prev) => ({
+          ...prev,
+          context: {
+            ...prev.context,
+            professionalBackground: prev.context.professionalBackground || parsed.role || '',
+            additionalContext: prev.context.additionalContext || `Skills: ${(parsed.skills || []).join(', ')}. Experience: ${parsed.experience || ''}. Education: ${parsed.education || ''}.`,
+          },
+        }))
       } catch { /* ignore */ }
     }
   }, [])
@@ -946,6 +965,25 @@ export default function DeepQuestions() {
   return (
     <div className="min-h-screen px-4 py-8 md:py-12">
       <div className="max-w-2xl mx-auto">
+        {/* ─── Resume banner ─── */}
+        {resumeData && resumeData.name && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 flex items-center gap-3"
+          >
+            <div className="w-8 h-8 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm text-white font-medium truncate">Resume loaded: {resumeData.name}</p>
+              <p className="text-xs text-slate-400 truncate">{resumeData.role} &middot; {(resumeData.skills || []).slice(0, 4).join(', ')}</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* ─── Progress bar ─── */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">

@@ -1,11 +1,29 @@
 import os
 import json
+import time
 import google.generativeai as genai
 from dotenv import load_dotenv
 
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+
+def _call_gemini(prompt: str, max_retries: int = 3) -> str:
+    """Call Gemini with retry logic for rate limits."""
+    model = genai.GenerativeModel("gemini-2.0-flash")
+    for attempt in range(max_retries):
+        try:
+            response = model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            if "429" in str(e) or "quota" in str(e).lower() or "rate" in str(e).lower():
+                wait = (attempt + 1) * 5
+                print(f"Gemini rate limited, waiting {wait}s (attempt {attempt + 1}/{max_retries})")
+                time.sleep(wait)
+            else:
+                raise
+    raise Exception("Gemini rate limit exceeded after retries")
 
 
 def _clean_json_response(text: str) -> str:
@@ -22,7 +40,6 @@ def _clean_json_response(text: str) -> str:
 
 def extract_resume(pdf_text: str) -> dict:
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
         prompt = f"""Extract the following information from this resume text and return ONLY valid JSON with these keys:
 - name (string)
 - role (string - current or most recent job title)
@@ -37,8 +54,8 @@ Resume text:
 
 Return ONLY valid JSON, no markdown, no backticks, no explanation."""
 
-        response = model.generate_content(prompt)
-        cleaned = _clean_json_response(response.text)
+        text = _call_gemini(prompt)
+        cleaned = _clean_json_response(text)
         return json.loads(cleaned)
     except Exception as e:
         print(f"Resume extraction error: {e}")
@@ -55,7 +72,6 @@ Return ONLY valid JSON, no markdown, no backticks, no explanation."""
 
 def generate_questions(profile: dict) -> list:
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
         topic = profile.get("topic", "")
         level = profile.get("currentLevel", "beginner")
         background = profile.get("professionalBackground", "")
@@ -93,8 +109,8 @@ Return ONLY this JSON array (no markdown, no backticks):
   }}
 ]"""
 
-        response = model.generate_content(prompt)
-        cleaned = _clean_json_response(response.text)
+        text = _call_gemini(prompt)
+        cleaned = _clean_json_response(text)
         return json.loads(cleaned)
     except Exception as e:
         print(f"Question generation error: {e}")
@@ -103,8 +119,6 @@ Return ONLY this JSON array (no markdown, no backticks):
 
 def diagnose_and_plan(profile: dict) -> dict:
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
-
         # Extract all profile fields safely
         name = profile.get("name", "Learner")
         role = profile.get("role", "")
@@ -187,8 +201,8 @@ Return ONLY this JSON (no markdown, no backticks):
   "voice_narration": "A warm, mentor-style paragraph greeting them by name and summarizing the diagnosis and plan. Speak as Coach Sarah."
 }}"""
 
-        response = model.generate_content(prompt)
-        cleaned = _clean_json_response(response.text)
+        text = _call_gemini(prompt)
+        cleaned = _clean_json_response(text)
         return json.loads(cleaned)
     except Exception as e:
         print(f"Diagnose and plan error: {e}")
@@ -207,7 +221,6 @@ Return ONLY this JSON (no markdown, no backticks):
 
 def search_resources(topic: str, gap: str, subtopics: list, level: str) -> list:
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
         prompt = f"""Find the best learning resources for someone learning {topic} (subtopics: {', '.join(subtopics) if subtopics else 'general'}) at {level} level who has this gap: {gap}.
 
 Return ONLY this JSON array (no markdown):
@@ -219,8 +232,8 @@ Return ONLY this JSON array (no markdown):
   {{"platform": "LinkedIn Learning", "title": "course title", "url": "https://linkedin.com/learning/...", "specific_section": "Chapter 5", "why_it_fits": "reason"}}
 ]"""
 
-        response = model.generate_content(prompt)
-        cleaned = _clean_json_response(response.text)
+        text = _call_gemini(prompt)
+        cleaned = _clean_json_response(text)
         return json.loads(cleaned)
     except Exception as e:
         print(f"Resource search error: {e}")
@@ -229,8 +242,6 @@ Return ONLY this JSON array (no markdown):
 
 def score_readiness(questions: list, answers: list, topic: str) -> dict:
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
-
         qa_text = ""
         for i, q in enumerate(questions):
             answer = answers[i] if i < len(answers) else "No answer"
@@ -252,8 +263,8 @@ Return ONLY this JSON (no markdown, no backticks):
 
 Set "ready" to true if score >= 60."""
 
-        response = model.generate_content(prompt)
-        cleaned = _clean_json_response(response.text)
+        text = _call_gemini(prompt)
+        cleaned = _clean_json_response(text)
         return json.loads(cleaned)
     except Exception as e:
         print(f"Readiness scoring error: {e}")
@@ -262,8 +273,6 @@ Set "ready" to true if score >= 60."""
 
 def chat_response(message: str, profile: dict, roadmap: list, history: list) -> str:
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
-
         # Build history context
         history_text = ""
         for msg in history[-10:]:  # Last 10 messages
@@ -292,8 +301,7 @@ User's message: {message}
 
 Respond helpfully as Coach Sarah. Be warm, encouraging, and specific. Keep responses concise but informative. If they ask about their roadmap, reference the specific steps. If they're stuck, provide practical advice."""
 
-        response = model.generate_content(prompt)
-        return response.text
+        return _call_gemini(prompt)
     except Exception as e:
         print(f"Chat response error: {e}")
         return "I'm having trouble responding right now. Please try again in a moment."
